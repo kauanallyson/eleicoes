@@ -56,7 +56,6 @@ public class FusoHorario {
         return emBrasilia(voto.SG_UF(), voto.CD_MUNICIPIO(), horarioLocal);
     }
 
-    /** Mesmo que {@link #emBrasilia(Voto, LocalDateTime)}, a partir da UF e do código TSE do município. */
     public LocalDateTime emBrasilia(String uf, int municipio, LocalDateTime horarioLocal) {
         if (uf.equals("ZZ")) return horarioLocal;
 

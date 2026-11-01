@@ -12,14 +12,12 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/** Resultado de todos os estados, junto com o horário de corte usado para separar os votos. */
 public record ResultadoApuracao(List<ResultadoEstado> estados, LocalTime fimDaVotacao, Duration tolerancia) {
 
     public LocalTime limiteComTolerancia() {
         return fimDaVotacao.plus(tolerancia);
     }
 
-    /** Junta os mapas de todos os estados somando os votos de cada chave. */
     public <K> Map<K, Long> somarEstados(Function<ResultadoEstado, Map<K, Long>> campo) {
         return estados.stream()
                 .flatMap(estado -> campo.apply(estado).entrySet().stream())

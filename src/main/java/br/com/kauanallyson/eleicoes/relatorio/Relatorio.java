@@ -17,7 +17,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/** Grava cada resposta da apuração em um CSV. */
 public class Relatorio {
 
     private final ResultadoCsvWriter csv;
@@ -26,21 +25,18 @@ public class Relatorio {
         this.csv = builder.csv;
     }
 
-    /** Cria um builder com os valores padrão: CSVs em {@code resultados/}. */
     public static Builder builder() {
         return new Builder();
     }
 
     public static class Builder {
 
-        /** Diretório padrão dos CSVs de resultado. */
         public static final Path DIRETORIO_PADRAO = Path.of("resultados");
 
         private ResultadoCsvWriter csv = new ResultadoCsvWriter(DIRETORIO_PADRAO);
 
         private Builder() { }
 
-        /** Diretório onde os CSVs de resultado são gravados. */
         public Builder diretorio(Path diretorio) {
             this.csv = new ResultadoCsvWriter(Objects.requireNonNull(diretorio, "diretorio"));
             return this;
@@ -56,12 +52,10 @@ public class Relatorio {
         }
     }
 
-    /** Apaga os CSVs de execuções anteriores, para o diretório ter só o resultado atual. */
     public void limparResultadosAnteriores() throws IOException {
         csv.limparResultadosAnteriores();
     }
 
-    /** {@code votos_por_estado.csv}: votos de cada candidato por UF, com percentual sobre o total da UF. */
     public void votosPorEstado(ResultadoApuracao resultado) {
         var linhas = resultado.estados().stream()
                 .flatMap(estado -> {
@@ -76,7 +70,6 @@ public class Relatorio {
                         csv.percentual(l.percentual())})).toList());
     }
 
-    /** {@code votos_totais.csv}: votos de cada candidato no país. */
     public void votosTotais(ResultadoApuracao resultado) {
         csv.write("votos_totais.csv", Stream.concat(
                 Stream.<String[]>of(new String[]{"CANDIDATO", "VOTOS"}),
@@ -84,12 +77,7 @@ public class Relatorio {
                         .map(e -> new String[]{e.getKey().nome(), e.getValue().toString()})).toList());
     }
 
-    /**
-     * {@code votos_depois_do_fim_da_votacao_HHMM.csv}: votos de cada UF em seções encerradas depois do
-     * fim da votação com tolerância, ordenado por percentual, com o total do país na última linha.
-     */
     public void votosDepoisDoFimDaVotacao(ResultadoApuracao resultado) {
-        // calcula cada percentual uma vez só, antes de ordenar
         var linhas = resultado.estados().stream()
                 .map(estado -> new VotosDepoisDoFim(estado.uf(), estado.totalDepoisDoFimDaVotacao(),
                         100.0 * estado.totalDepoisDoFimDaVotacao() / estado.totalDeVotos()))
@@ -106,10 +94,7 @@ public class Relatorio {
                 .toList());
     }
 
-    /**
-     * {@code candidatos_ate_e_apos_fim_da_votacao_HHMM.csv}: votos de cada candidato nas seções encerradas
-     * até e após o fim da votação com tolerância; cada percentual é dentro do seu grupo de seções.
-     */
+    /** Cada percentual é calculado dentro do seu grupo de seções (até / após o limite). */
     public void candidatosAteEDepoisDoFimDaVotacao(ResultadoApuracao resultado) {
         var ate = resultado.somarEstados(ResultadoEstado::votosAteFimDaVotacao);
         var depois = resultado.somarEstados(ResultadoEstado::votosDepoisDoFimDaVotacao);

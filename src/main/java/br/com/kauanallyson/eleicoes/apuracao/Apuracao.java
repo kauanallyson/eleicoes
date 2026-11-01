@@ -19,7 +19,6 @@ import java.util.Objects;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
-/** Contagem dos votos a partir dos CSVs do boletim de urna. */
 public class Apuracao {
 
     /** Horário oficial de encerramento da votação (Brasília). */
@@ -37,14 +36,12 @@ public class Apuracao {
         this.limiteComTolerancia = FIM_DA_VOTACAO.plus(tolerancia);
     }
 
-    /** Cria um builder com os valores padrão: boletins em {@code bweb/}, tolerância de 10 min. */
     public static Builder builder() {
         return new Builder();
     }
 
     public static class Builder {
 
-        /** Diretório padrão dos boletins de urna. */
         public static final Path DIRETORIO_PADRAO = Path.of("bweb");
         /** O TSE considera 17h10 o horário estimado para os procedimentos de encerramento da urna. */
         public static final Duration TOLERANCIA_PADRAO = Duration.ofMinutes(10);
@@ -55,7 +52,6 @@ public class Apuracao {
 
         private Builder() { }
 
-        /** Diretório com os CSVs do boletim de urna, um por UF. */
         public Builder diretorio(Path diretorio) {
             this.leitor = new VotoReader(Objects.requireNonNull(diretorio, "diretorio"));
             return this;
@@ -87,7 +83,6 @@ public class Apuracao {
         }
     }
 
-    /** Apura cada arquivo em paralelo (ForkJoinPool comum); toList() mantém a ordem dos arquivos. */
     public ResultadoApuracao apurar() throws IOException {
         var estados = leitor.listCsv().parallelStream()
                 .map(this::apurarEstado)

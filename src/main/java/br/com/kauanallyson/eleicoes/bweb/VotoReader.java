@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-/** Lê os boletins de urna (bweb) de um diretório. */
 public class VotoReader {
 
     private static final char CSV_DELIMITER = ';';
@@ -28,7 +27,6 @@ public class VotoReader {
         this.diretorio = diretorio;
     }
 
-    /** Lista os CSVs do diretório, em ordem alfabética. */
     public List<File> listCsv() throws IOException {
         try (var files = Files.list(diretorio)) {
             return files.filter(file -> !Files.isDirectory(file))
@@ -39,10 +37,7 @@ public class VotoReader {
         }
     }
 
-    /**
-     * Lê o CSV linha a linha sob demanda. O chamador precisa fechar o Stream
-     * (try-with-resources) para liberar o arquivo.
-     */
+    /** Lê sob demanda; o chamador precisa fechar o Stream para liberar o arquivo. */
     public Stream<Voto> read(File csv) throws IOException {
         if (!csv.exists()) throw new IllegalArgumentException("Arquivo não encontrado: " + csv);
 

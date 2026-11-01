@@ -7,7 +7,6 @@ package br.com.kauanallyson.eleicoes.apuracao;
 
 import java.util.Map;
 
-/** Operações sobre mapas de votos (chave → quantidade). */
 public final class Votos {
 
     private Votos() { }
