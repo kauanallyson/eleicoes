@@ -37,7 +37,7 @@ Em português, no formato [Conventional Commits](https://www.conventionalcommits
 ```
 feat: prepara boletins do TSE (unzip + Latin-1 para UTF-8)
 fix: converte o horário de Fernando de Noronha
-docs: documenta a variável ELEICOES_PREPARAR_BOLETINS
+docs: documenta os argumentos --ano e --turno
 ```
 
 Tipos usados: `feat`, `fix`, `refactor`, `test`, `docs`, `build`, `chore`. Referencie a issue no
@@ -45,8 +45,12 @@ corpo da mensagem (`Refs #1`).
 
 ## Código
 
-- **Nomes no domínio, em português**: `Apuracao`, `HorarioDaVotacao`, `VotosNaSecao`. Os nomes dos
-  campos de `Voto` seguem o cabeçalho do CSV do TSE.
+- **Nomes**:
+  - conceitos do domínio eleitoral, em português: `Apuracao`, `HorarioDaVotacao`, `VotosNaSecao`;
+  - infraestrutura e coisas internas da aplicação podem ser em inglês: `Params`, `Confirmation`;
+  - design patterns mantêm o nome em inglês: `Builder`, `Reader`, `Writer`, adapter;
+  - os campos de `Voto` seguem o cabeçalho do CSV do TSE;
+  - a interface com o usuário (argumentos `--ano`, `--turno`, `--sim`, logs, CSVs) fica em português.
 - **Pacotes**:
   - `apuracao`: a contagem; não depende dos formatos do TSE nem de I/O.
   - `bweb`: adapters que leem os arquivos do TSE e implementam `FonteDeVotos`.
