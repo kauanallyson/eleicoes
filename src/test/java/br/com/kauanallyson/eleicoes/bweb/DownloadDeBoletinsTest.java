@@ -63,9 +63,9 @@ class DownloadDeBoletinsTest {
         servidor.stop(0);
     }
 
-    private DownloadDeBoletins download(Path dir, Confirmacao confirmacao) {
+    private DownloadDeBoletins download(Path dir, Confirmation confirmation) {
         var api = URI.create("http://127.0.0.1:" + servidor.getAddress().getPort() + "/api");
-        return new DownloadDeBoletins(dir, new CatalogoTse(http, api, 2), confirmacao, http, log::add);
+        return new DownloadDeBoletins(dir, new CatalogoTse(http, api, 2), confirmation, http, log::add);
     }
 
     @Test

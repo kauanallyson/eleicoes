@@ -11,22 +11,22 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-class ParametrosTest {
+class ParamsTest {
 
     @Test
     void semArgumentosEhO2oTurnoDe2026SemAutorizarDownload() {
-        assertEquals(new Parametros(new Eleicao(2026, 2), false), Parametros.de(new String[0]));
+        assertEquals(new Params(new Eleicao(2026, 2), false), Params.parse(new String[0]));
     }
 
     @Test
     void anoTurnoESim() {
-        assertEquals(new Parametros(new Eleicao(2022, 1), true), Parametros.de(new String[]{"--turno=1", "--sim", "--ano=2022"}));
+        assertEquals(new Params(new Eleicao(2022, 1), true), Params.parse(new String[]{"--turno=1", "--sim", "--ano=2022"}));
     }
 
     @Test
     void argumentoDesconhecidoOuInvalidoEhErro() {
-        assertThrows(IllegalArgumentException.class, () -> Parametros.de(new String[]{"--ano"}));
-        assertThrows(IllegalArgumentException.class, () -> Parametros.de(new String[]{"--ano=dois mil"}));
-        assertThrows(IllegalArgumentException.class, () -> Parametros.de(new String[]{"--turno=3"}));
+        assertThrows(IllegalArgumentException.class, () -> Params.parse(new String[]{"--ano"}));
+        assertThrows(IllegalArgumentException.class, () -> Params.parse(new String[]{"--ano=dois mil"}));
+        assertThrows(IllegalArgumentException.class, () -> Params.parse(new String[]{"--turno=3"}));
     }
 }

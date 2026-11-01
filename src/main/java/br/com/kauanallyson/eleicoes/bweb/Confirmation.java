@@ -9,21 +9,21 @@ import java.io.Console;
 
 /** Pergunta ao usuário antes de uma ação cara, como baixar centenas de MB. */
 @FunctionalInterface
-public interface Confirmacao {
+public interface Confirmation {
 
-    boolean confirmar(String pergunta);
+    boolean confirm(String question);
 
     /**
-     * Com {@code sim} (o {@code --sim} da linha de comando), confirma sem perguntar. Sem terminal interativo (ex.: CI) e sem
-     * {@code --sim}, recusa: nunca baixa nada sem o usuário pedir.
+     * Com {@code autoConfirm} ({@code --sim} na linha de comando), confirma sem perguntar. Sem terminal
+     * interativo (ex.: CI) e sem {@code --sim}, recusa: nunca baixa nada sem o usuário pedir.
      */
-    static Confirmacao doTerminal(boolean sim) {
-        if (sim) return pergunta -> true;
+    static Confirmation fromTerminal(boolean autoConfirm) {
+        if (autoConfirm) return question -> true;
         Console console = System.console();
-        if (console == null) return pergunta -> false;
-        return pergunta -> {
-            var resposta = console.readLine("%s [s/N] ", pergunta);
-            return resposta != null && resposta.trim().toLowerCase().matches("s|sim|y|yes");
+        if (console == null) return question -> false;
+        return question -> {
+            var answer = console.readLine("%s [s/N] ", question);
+            return answer != null && answer.trim().toLowerCase().matches("s|sim|y|yes");
         };
     }
 }

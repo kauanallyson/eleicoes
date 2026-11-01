@@ -38,16 +38,16 @@ public class DownloadDeBoletins {
 
     private final Path diretorio;
     private final CatalogoTse catalogo;
-    private final Confirmacao confirmacao;
+    private final Confirmation confirmation;
     private final HttpClient http;
     private final Consumer<String> log;
     private final PreparadorDeBoletins preparador;
 
-    public DownloadDeBoletins(Path diretorio, CatalogoTse catalogo, Confirmacao confirmacao, HttpClient http,
+    public DownloadDeBoletins(Path diretorio, CatalogoTse catalogo, Confirmation confirmation, HttpClient http,
                               Consumer<String> log) {
         this.diretorio = diretorio;
         this.catalogo = catalogo;
-        this.confirmacao = confirmacao;
+        this.confirmation = confirmation;
         this.http = http;
         this.log = mensagem -> log.accept("[dados] " + mensagem);
         this.preparador = new PreparadorDeBoletins(diretorio);
@@ -78,7 +78,7 @@ public class DownloadDeBoletins {
         log.accept("download: %s (%d arquivos .zip); espaço em disco depois de descompactar: ~%s".formatted(
                 tamanho(total), faltando.size(), tamanho((long) (total * DESCOMPACTADO_POR_COMPACTADO))));
 
-        if (!confirmacao.confirmar("Baixar agora?")) {
+        if (!confirmation.confirm("Baixar agora?")) {
             log.accept("download não autorizado; nada foi baixado (sem terminal interativo, rode com --sim)");
             return false;
         }
