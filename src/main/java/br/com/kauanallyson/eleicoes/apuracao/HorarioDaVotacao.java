@@ -12,18 +12,20 @@ import java.time.LocalTime;
 import java.util.Objects;
 
 /**
- * O dia e o fim da votação (horário de Brasília) e a tolerância para o encerramento da urna.
- * Recebe os horários no fuso local da seção, como vêm no boletim de urna.
+ * O dia e o fim da votação (17h) e a tolerância para o encerramento da urna. Recebe os horários no fuso local
+ * da seção, como vêm no boletim de urna. Desde 2022 a votação segue o horário de Brasília em todo o
+ * país; antes, cada seção encerrava às 17h do seu fuso local.
  */
 public final class HorarioDaVotacao {
 
     public static final LocalTime FIM_DA_VOTACAO = LocalTime.of(17, 0);
-    public static final LocalDate SEGUNDO_TURNO_2026 = LocalDate.of(2026, 10, 25);
     /** O TSE considera 17h10 o horário estimado para os procedimentos de encerramento da urna. */
     public static final Duration TOLERANCIA_PADRAO = Duration.ofMinutes(10);
+    private static final int PRIMEIRO_ANO_COM_HORARIO_DE_BRASILIA = 2022;
 
     private final LocalDate data;
     private final Duration tolerancia;
+    private final boolean horarioDeBrasilia;
     private final FusoHorario fusoHorario = new FusoHorario();
 
     /**
@@ -35,10 +37,11 @@ public final class HorarioDaVotacao {
         Objects.requireNonNull(tolerancia, "tolerancia");
         if (tolerancia.isNegative()) throw new IllegalArgumentException("tolerância não pode ser negativa: " + tolerancia);
         this.tolerancia = tolerancia;
+        this.horarioDeBrasilia = data.getYear() >= PRIMEIRO_ANO_COM_HORARIO_DE_BRASILIA;
     }
 
-    public static HorarioDaVotacao padrao() {
-        return new HorarioDaVotacao(SEGUNDO_TURNO_2026, TOLERANCIA_PADRAO);
+    public static HorarioDaVotacao da(Eleicao eleicao, Duration tolerancia) {
+        return new HorarioDaVotacao(eleicao.data(), tolerancia);
     }
 
     public LocalDate data() {
@@ -58,10 +61,12 @@ public final class HorarioDaVotacao {
     }
 
     public boolean encerrouDepoisDoLimite(String uf, int municipio, LocalDateTime encerramentoLocal) {
-        return emBrasilia(uf, municipio, encerramentoLocal).isAfter(limite());
+        return horarioDoFim(uf, municipio, encerramentoLocal).isAfter(limite());
     }
 
-    private LocalTime emBrasilia(String uf, int municipio, LocalDateTime horarioLocal) {
+    /** Horário no mesmo relógio do fim da votação: Brasília desde 2022, o fuso local da seção antes. */
+    private LocalTime horarioDoFim(String uf, int municipio, LocalDateTime horarioLocal) {
+        if (!horarioDeBrasilia) return horarioLocal.toLocalTime();
         return fusoHorario.emBrasilia(uf, municipio, horarioLocal).toLocalTime();
     }
 }

@@ -16,6 +16,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.List;
@@ -24,13 +25,15 @@ import java.util.function.Consumer;
 
 /**
  * Garante que {@code bweb/} tem o {@code UF.csv} de cada UF publicada pelo TSE: baixa só o que falta, depois de
- * mostrar o tamanho e pedir confirmação. Execuções seguintes, com tudo presente, não baixam nada.
+ * mostrar o tamanho e pedir confirmação. Quando a pasta fica completa, grava um marcador e as execuções
+ * seguintes não consultam mais o TSE (funcionam sem internet).
  */
 public class DownloadDeBoletins {
 
     /** Boletins descompactados em UTF-8 ocupam ~6,3x o tamanho dos .zip (144 MB → ~900 MB no 2º turno de 2026). */
     private static final double DESCOMPACTADO_POR_COMPACTADO = 6.3;
     private static final int TENTATIVAS = 5;
+    private static final String MARCADOR = ".boletins-completos";
     private static final Locale PT_BR = Locale.of("pt", "BR");
 
     private final Path diretorio;
@@ -53,9 +56,18 @@ public class DownloadDeBoletins {
     /** @return {@code false} se faltavam boletins e o usuário não autorizou o download */
     public boolean garantir() throws IOException, InterruptedException {
         var presentes = new HashSet<>(Files.isDirectory(diretorio) ? new VotoReader(diretorio).ufs() : List.of());
-        var faltando = catalogo.pacotes().stream().filter(p -> !presentes.contains(p.uf())).toList();
+        if (Files.exists(diretorio.resolve(MARCADOR))) {
+            log.accept("boletins de urna de %d UFs já estão em %s".formatted(presentes.size(), diretorio));
+            return true;
+        }
+
+        var faltando = new ArrayList<PacoteTse>();
+        for (var pacote : catalogo.pacotes()) {
+            if (!presentes.contains(pacote.uf())) faltando.add(catalogo.comTamanho(pacote));
+        }
         if (faltando.isEmpty()) {
             log.accept("boletins de urna de %d UFs já estão em %s".formatted(presentes.size(), diretorio));
+            marcarCompleto();
             return true;
         }
 
@@ -88,7 +100,12 @@ public class DownloadDeBoletins {
             if (sobras.findAny().isEmpty()) Files.delete(temporarios);
         }
         log.accept("%d UF(s) prontas em %s".formatted(faltando.size(), diretorio));
+        marcarCompleto();
         return true;
+    }
+
+    private void marcarCompleto() throws IOException {
+        Files.writeString(diretorio.resolve(MARCADOR), String.join("\n", new VotoReader(diretorio).ufs()) + "\n");
     }
 
     /** Retoma de onde parou (Range) se a conexão cair no meio. */

@@ -79,6 +79,17 @@ class DownloadDeBoletinsTest {
         assertFalse(Files.exists(dir.resolve(".download")));
         assertFalse(pedidos.contains("GET /buweb/bweb_2t_SP_261020260742.zip"));
         assertTrue(pedidos.contains("GET /buweb/bweb_2t_AC_261020260742.zip.sha512"));
+        assertFalse(pedidos.contains("HEAD /buweb/bweb_2t_SP_261020260742.zip"), "só consulta o tamanho do que falta");
+    }
+
+    @Test
+    void depoisDeCompletoNaoConsultaMaisOTse(@TempDir Path dir) throws Exception {
+        assertTrue(download(dir, pergunta -> true).garantir());
+        pedidos.clear();
+        servidor.stop(0);
+
+        assertTrue(download(dir, pergunta -> fail("não deveria perguntar")).garantir());
+        assertEquals(List.of(), pedidos);
     }
 
     @Test

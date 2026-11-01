@@ -26,11 +26,11 @@ class ApuracaoTest {
     }
 
     private static ResultadoApuracao apurar(Map<String, List<VotosNaSecao>> porUf) throws Exception {
-        return Apuracao.builder().fonte(new FonteEmMemoria<>(porUf)).horario(HORARIO).build().apurar();
+        return Apuracao.builder().fonte(new FonteEmMemoria<>(porUf)).horario(HORARIO).cargo("Presidente").build().apurar();
     }
 
     @Test
-    void ignoraGovernadorELinhasSemCargo() throws Exception {
+    void soApuraOCargoDaEleicao() throws Exception {
         var resultado = apurar(Map.of("SP", List.of(
                 presidente("SP", "A", 10, DIA.atTime(17, 0)),
                 new VotosNaSecao("SP", 1, "Governador", "G", 99, DIA.atTime(17, 0)),

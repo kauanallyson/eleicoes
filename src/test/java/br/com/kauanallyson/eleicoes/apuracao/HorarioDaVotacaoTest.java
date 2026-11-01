@@ -65,6 +65,14 @@ class HorarioDaVotacaoTest {
 
 
     @Test
+    void antesDe2022CadaSecaoEncerravaAs17hDoSeuFusoLocal() {
+        var horario2018 = new HorarioDaVotacao(LocalDate.of(2018, 10, 28), Duration.ofMinutes(10));
+
+        assertFalse(horario2018.encerrouDepoisDoLimite("AC", 1392, LocalDate.of(2018, 10, 28).atTime(17, 5)));
+        assertTrue(horario2018.encerrouDepoisDoLimite("AC", 1392, LocalDate.of(2018, 10, 28).atTime(17, 11)));
+    }
+
+    @Test
     void recusaToleranciaNegativa() {
         assertThrows(IllegalArgumentException.class, () -> new HorarioDaVotacao(DIA, Duration.ofMinutes(-1)));
     }

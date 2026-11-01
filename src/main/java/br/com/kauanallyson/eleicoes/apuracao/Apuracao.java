@@ -16,10 +16,12 @@ public class Apuracao {
 
     private final FonteDeVotos<VotosNaSecao> fonte;
     private final HorarioDaVotacao horario;
+    private final String cargo;
 
     private Apuracao(Builder builder) {
         this.fonte = builder.fonte;
         this.horario = builder.horario;
+        this.cargo = builder.cargo;
     }
 
     public static Builder builder() {
@@ -29,7 +31,8 @@ public class Apuracao {
     public static class Builder {
 
         private FonteDeVotos<VotosNaSecao> fonte;
-        private HorarioDaVotacao horario = HorarioDaVotacao.padrao();
+        private HorarioDaVotacao horario;
+        private String cargo;
 
         private Builder() { }
 
@@ -43,8 +46,16 @@ public class Apuracao {
             return this;
         }
 
+        /** Só os votos deste cargo são apurados (ex.: Presidente, Prefeito). */
+        public Builder cargo(String cargo) {
+            this.cargo = Objects.requireNonNull(cargo, "cargo");
+            return this;
+        }
+
         public Apuracao build() {
             Objects.requireNonNull(fonte, "fonte");
+            Objects.requireNonNull(horario, "horario");
+            Objects.requireNonNull(cargo, "cargo");
             return new Apuracao(this);
         }
     }
@@ -70,18 +81,18 @@ public class Apuracao {
 
     private Collector<VotosNaSecao, ?, Contagem<Candidato>> somarTodosVotosValidos() {
         return Collectors.filtering(
-                v -> !v.cargo().equals("Governador") && !v.cargo().equals("#NULO#"),
+                v -> v.cargo().equals(cargo),
                 Contagem.por(v -> new Candidato(v.cargo(), v.votavel()), VotosNaSecao::quantidade));
     }
 
     /**
      * O boletim não registra o horário de cada voto, só o de encerramento da seção.
-     * Separa os votos para Presidente, por candidato, entre seções que encerraram até o limite
+     * Separa os votos do cargo, por candidato, entre seções que encerraram até o limite
      * (false) e depois dele (true).
      */
     private Collector<VotosNaSecao, ?, Map<Boolean, Contagem<String>>> votosPorCandidatoAntesEDepoisDoFimDaVotacao() {
         return Collectors.filtering(
-                v -> v.cargo().equals("Presidente") && v.encerramentoLocal() != null,
+                v -> v.cargo().equals(cargo) && v.encerramentoLocal() != null,
                 Collectors.partitioningBy(
                         v -> horario.encerrouDepoisDoLimite(v.uf(), v.municipio(), v.encerramentoLocal()),
                         Contagem.por(VotosNaSecao::votavel, VotosNaSecao::quantidade)));
