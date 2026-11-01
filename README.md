@@ -32,20 +32,18 @@ Os arquivos têm separador `;` e o cabeçalho
 original (`DT_GERACAO;HH_GERACAO;ANO_ELEICAO;...`). O TSE publica em **Latin-1 (ISO-8859-1)**,
 e o programa lê em **UTF-8**.
 
-O jeito mais simples é colocar os `.zip` do TSE em `bweb/`, sem descompactar, e rodar com
-`ELEICOES_PREPARAR_BOLETINS=true`: antes da apuração, cada `bweb_2t_UF_<data>.zip` vira `bweb/UF.csv`
-já em UTF-8 (o `leiame.pdf` é ignorado e um `UF.csv` antigo é substituído).
+Não é preciso baixar nada à mão: se `bweb/<ano>/<turno>t/` não tiver os boletins, o programa consulta
+o catálogo do TSE, mostra quais UFs faltam e o tamanho do download, e **pede confirmação**. Depois baixa
+cada `.zip`, confere o SHA-512 publicado pelo TSE, converte para UTF-8 e grava `bweb/<ano>/<turno>t/UF.csv`.
+Com a pasta completa, as execuções seguintes não consultam mais o TSE.
 
 ```sh
-ELEICOES_PREPARAR_BOLETINS=true mvn compile exec:java -Dexec.mainClass=Main
+mvn compile exec:java -Dexec.mainClass=Main -Dexec.args="--ano=2026 --turno=2"   # padrão: 2026, 2º turno
+mvn compile exec:java -Dexec.mainClass=Main -Dexec.args="--ano=2022 --turno=1 --sim"  # --sim: baixa sem perguntar
 ```
 
-Sem a variável, o programa lê os `bweb/UF.csv` como estiverem. Para preparar à mão:
-
-```sh
-unzip bweb_2t_SP_261020260742.zip
-iconv -f latin1 -t utf-8 bweb_2t_SP_261020260742.csv > bweb/SP.csv
-```
+Só eleições gerais (2018, 2022, 2026...) e o cargo de Presidente são suportados; eleições municipais e
+cargos estaduais estão na [issue #3](https://github.com/kauanallyson/eleicoes/issues/3).
 
 ## Como executar
 
