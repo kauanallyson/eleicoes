@@ -4,13 +4,11 @@
  */
 
 import br.com.kauanallyson.eleicoes.apuracao.Apuracao;
-import br.com.kauanallyson.eleicoes.apuracao.FusoHorario;
-import br.com.kauanallyson.eleicoes.bweb.VotoReader;
 import br.com.kauanallyson.eleicoes.relatorio.Relatorio;
 import br.com.kauanallyson.eleicoes.relatorio.ResultadoCsvWriter;
 
 void main() throws IOException {
-    var apuracao = new Apuracao(new VotoReader(Path.of("bweb")), new FusoHorario(), Duration.ofMinutes(10));
+    var apuracao = Apuracao.builder().build();
     var csv = new ResultadoCsvWriter(Path.of("resultados"));
     var relatorio = new Relatorio(csv, 5);
 

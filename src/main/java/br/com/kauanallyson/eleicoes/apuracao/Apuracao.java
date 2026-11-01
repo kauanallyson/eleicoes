@@ -11,9 +11,11 @@ import br.com.kauanallyson.eleicoes.bweb.VotoReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -28,15 +30,61 @@ public class Apuracao {
     private final Duration tolerancia;
     private final LocalTime limiteComTolerancia;
 
-    /**
-     * @param tolerancia tempo dado ao mesário para encerrar a urna depois do fim da votação; seções que
-     *                   fecharam dentro dessa tolerância não contam como votação após o fim
-     */
-    public Apuracao(VotoReader leitor, FusoHorario fusoHorario, Duration tolerancia) {
-        this.leitor = leitor;
-        this.fusoHorario = fusoHorario;
-        this.tolerancia = tolerancia;
+    private Apuracao(Builder builder) {
+        this.leitor = builder.leitor;
+        this.fusoHorario = builder.fusoHorario;
+        this.tolerancia = builder.tolerancia;
         this.limiteComTolerancia = FIM_DA_VOTACAO.plus(tolerancia);
+    }
+
+    /** Cria um builder com os valores padrão: boletins em {@code bweb/}, tolerância de 10 min. */
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+
+        /** Diretório padrão dos boletins de urna. */
+        public static final Path DIRETORIO_PADRAO = Path.of("bweb");
+        /** O TSE considera 17h10 o horário estimado para os procedimentos de encerramento da urna. */
+        public static final Duration TOLERANCIA_PADRAO = Duration.ofMinutes(10);
+
+        private VotoReader leitor = new VotoReader(DIRETORIO_PADRAO);
+        private FusoHorario fusoHorario = new FusoHorario();
+        private Duration tolerancia = TOLERANCIA_PADRAO;
+
+        private Builder() { }
+
+        /** Diretório com os CSVs do boletim de urna, um por UF. */
+        public Builder diretorio(Path diretorio) {
+            this.leitor = new VotoReader(Objects.requireNonNull(diretorio, "diretorio"));
+            return this;
+        }
+
+        public Builder leitor(VotoReader leitor) {
+            this.leitor = Objects.requireNonNull(leitor, "leitor");
+            return this;
+        }
+
+        public Builder fusoHorario(FusoHorario fusoHorario) {
+            this.fusoHorario = Objects.requireNonNull(fusoHorario, "fusoHorario");
+            return this;
+        }
+
+        /**
+         * Tempo dado ao mesário para encerrar a urna depois do fim da votação; seções que
+         * fecharam dentro dessa tolerância não contam como votação após o fim.
+         */
+        public Builder tolerancia(Duration tolerancia) {
+            Objects.requireNonNull(tolerancia, "tolerancia");
+            if (tolerancia.isNegative()) throw new IllegalArgumentException("tolerância não pode ser negativa: " + tolerancia);
+            this.tolerancia = tolerancia;
+            return this;
+        }
+
+        public Apuracao build() {
+            return new Apuracao(this);
+        }
     }
 
     /** Apura cada arquivo em paralelo (ForkJoinPool comum); toList() mantém a ordem dos arquivos. */
