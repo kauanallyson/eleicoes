@@ -20,11 +20,5 @@ void main() throws IOException {
             .diretorio(Path.of("resultados"))
             .build();
 
-    var resultado = apuracao.apurar();
-    relatorio.limparResultadosAnteriores();
-
-    relatorio.votosPorEstado(resultado);
-    relatorio.votosTotais(resultado);
-    relatorio.votosDepoisDoFimDaVotacao(resultado);
-    relatorio.candidatosAteEDepoisDoFimDaVotacao(resultado);
+    relatorio.gravar(apuracao.apurar());
 }

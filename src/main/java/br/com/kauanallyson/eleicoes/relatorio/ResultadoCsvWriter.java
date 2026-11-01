@@ -9,14 +9,14 @@ import com.opencsv.CSVWriter;
 import com.opencsv.ICSVWriter;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Stream;
 
-/** Grava as respostas em CSV no mesmo padrão do TSE: separador ';', UTF-8 e decimal com vírgula. */
+/** Grava as tabelas em CSV no mesmo padrão do TSE: separador ';', UTF-8 e decimal com vírgula. */
 public class ResultadoCsvWriter {
 
     private static final Locale PT_BR = Locale.of("pt", "BR");
@@ -27,8 +27,16 @@ public class ResultadoCsvWriter {
         this.diretorio = diretorio;
     }
 
-    /** Apaga os CSVs de execuções anteriores, para o diretório ter só o resultado atual. */
-    public void limparResultadosAnteriores() throws IOException {
+    /** Apaga os CSVs de execuções anteriores e grava um arquivo por tabela. */
+    public void gravar(List<Tabela> tabelas) throws IOException {
+        limparResultadosAnteriores();
+        Files.createDirectories(diretorio);
+        for (var tabela : tabelas) {
+            gravar(tabela);
+        }
+    }
+
+    private void limparResultadosAnteriores() throws IOException {
         if (!Files.isDirectory(diretorio)) return;
         try (var arquivos = Files.list(diretorio)) {
             for (var csv : arquivos.filter(f -> f.getFileName().toString().endsWith(".csv")).toList()) {
@@ -37,24 +45,23 @@ public class ResultadoCsvWriter {
         }
     }
 
-    void write(String arquivo, List<String[]> linhas) {
-        try {
-            Files.createDirectories(diretorio);
-            try (var writer = new CSVWriter(
-                    Files.newBufferedWriter(caminho(arquivo), StandardCharsets.UTF_8),
-                    ';', ICSVWriter.DEFAULT_QUOTE_CHARACTER, ICSVWriter.DEFAULT_ESCAPE_CHARACTER, ICSVWriter.DEFAULT_LINE_END)) {
-                writer.writeAll(linhas);
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+    private void gravar(Tabela tabela) throws IOException {
+        var linhas = Stream.concat(
+                Stream.<String[]>of(tabela.cabecalho().toArray(String[]::new)),
+                tabela.linhas().stream().map(linha -> linha.stream().map(this::celula).toArray(String[]::new)));
+
+        try (var writer = new CSVWriter(
+                Files.newBufferedWriter(diretorio.resolve(tabela.nome()), StandardCharsets.UTF_8),
+                ';', ICSVWriter.DEFAULT_QUOTE_CHARACTER, ICSVWriter.DEFAULT_ESCAPE_CHARACTER, ICSVWriter.DEFAULT_LINE_END)) {
+            writer.writeAll(linhas.toList());
         }
     }
 
-    private Path caminho(String arquivo) {
-        return diretorio.resolve(arquivo);
-    }
-
-    String percentual(double valor) {
-        return String.format(PT_BR, "%.2f", valor);
+    private String celula(Object valor) {
+        return switch (valor) {
+            case Double percentual -> String.format(PT_BR, "%.2f", percentual);
+            case Boolean sim -> sim ? "SIM" : "NAO";
+            default -> String.valueOf(valor);
+        };
     }
 }
