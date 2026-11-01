@@ -102,12 +102,10 @@ public class Apuracao {
         }
     }
 
-    private Collector<Voto, ?, Map<Candidato, Long>> somarTodosVotosValidos() {
+    private Collector<Voto, ?, Contagem<Candidato>> somarTodosVotosValidos() {
         return Collectors.filtering(
                 v -> !v.DS_CARGO_PERGUNTA().equals("Governador") && !v.DS_CARGO_PERGUNTA().equals("#NULO#"),
-                Collectors.groupingBy(
-                        v -> new Candidato(v.DS_CARGO_PERGUNTA(), v.NM_VOTAVEL()),
-                        Collectors.summingLong(Voto::QT_VOTOS)));
+                Contagem.por(v -> new Candidato(v.DS_CARGO_PERGUNTA(), v.NM_VOTAVEL()), Voto::QT_VOTOS));
     }
 
     /**
@@ -115,12 +113,12 @@ public class Apuracao {
      * Separa os votos para Presidente, por candidato, entre seções que encerraram até o fim da votação
      * com tolerância (false) e depois dele (true), no horário de Brasília.
      */
-    private Collector<Voto, ?, Map<Boolean, Map<String, Long>>> votosPorCandidatoAntesEDepoisDoFimDaVotacao() {
+    private Collector<Voto, ?, Map<Boolean, Contagem<String>>> votosPorCandidatoAntesEDepoisDoFimDaVotacao() {
         return Collectors.filtering(
                 v -> v.DS_CARGO_PERGUNTA().equals("Presidente") && v.DT_ENCERRAMENTO() != null,
                 Collectors.partitioningBy(
                         v -> fusoHorario.emBrasilia(v, v.DT_ENCERRAMENTO()).toLocalTime().isAfter(limiteComTolerancia),
-                        Collectors.groupingBy(Voto::NM_VOTAVEL, Collectors.summingLong(Voto::QT_VOTOS))));
+                        Contagem.por(Voto::NM_VOTAVEL, Voto::QT_VOTOS)));
     }
 
     private String ufDoArquivo(File csv) {

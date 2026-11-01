@@ -5,18 +5,7 @@
 
 package br.com.kauanallyson.eleicoes.apuracao;
 
-import java.util.Map;
-
 public record ResultadoEstado(String uf,
-                              Map<Candidato, Long> votos,
-                              Map<String, Long> votosAteFimDaVotacao,
-                              Map<String, Long> votosDepoisDoFimDaVotacao) {
-
-    public long totalDeVotos() {
-        return Votos.soma(votos);
-    }
-
-    public long totalDepoisDoFimDaVotacao() {
-        return Votos.soma(votosDepoisDoFimDaVotacao);
-    }
-}
+                              Contagem<Candidato> votos,
+                              Contagem<String> votosAteFimDaVotacao,
+                              Contagem<String> votosDepoisDoFimDaVotacao) { }
