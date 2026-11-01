@@ -9,10 +9,13 @@ import br.com.kauanallyson.eleicoes.apuracao.ResultadoApuracao;
 import br.com.kauanallyson.eleicoes.apuracao.ResultadoEstado;
 import br.com.kauanallyson.eleicoes.apuracao.Votos;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -24,12 +27,54 @@ public class Relatorio {
     private final ResultadoCsvWriter csv;
     private final int top;
 
-    /**
-     * @param top quantas linhas de cada resposta aparecem no terminal; o resultado completo vai para o CSV
-     */
-    public Relatorio(ResultadoCsvWriter csv, int top) {
-        this.csv = csv;
-        this.top = top;
+    private Relatorio(Builder builder) {
+        this.csv = builder.csv;
+        this.top = builder.top;
+    }
+
+    /** Cria um builder com os valores padrão: CSVs em {@code resultados/}, top 5 no terminal. */
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+
+        /** Diretório padrão dos CSVs de resultado. */
+        public static final Path DIRETORIO_PADRAO = Path.of("resultados");
+        /** Quantidade padrão de linhas de cada resposta exibidas no terminal. */
+        public static final int TOP_PADRAO = 5;
+
+        private ResultadoCsvWriter csv = new ResultadoCsvWriter(DIRETORIO_PADRAO);
+        private int top = TOP_PADRAO;
+
+        private Builder() { }
+
+        /** Diretório onde os CSVs de resultado são gravados. */
+        public Builder diretorio(Path diretorio) {
+            this.csv = new ResultadoCsvWriter(Objects.requireNonNull(diretorio, "diretorio"));
+            return this;
+        }
+
+        public Builder csv(ResultadoCsvWriter csv) {
+            this.csv = Objects.requireNonNull(csv, "csv");
+            return this;
+        }
+
+        /** Quantas linhas de cada resposta aparecem no terminal; o resultado completo vai para o CSV. */
+        public Builder top(int top) {
+            if (top <= 0) throw new IllegalArgumentException("top deve ser positivo: " + top);
+            this.top = top;
+            return this;
+        }
+
+        public Relatorio build() {
+            return new Relatorio(this);
+        }
+    }
+
+    /** Apaga os CSVs de execuções anteriores, para o diretório ter só o resultado atual. */
+    public void limparResultadosAnteriores() throws IOException {
+        csv.limparResultadosAnteriores();
     }
 
     public void votosPorEstado(ResultadoApuracao resultado) {

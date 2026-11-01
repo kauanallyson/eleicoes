@@ -5,15 +5,13 @@
 
 import br.com.kauanallyson.eleicoes.apuracao.Apuracao;
 import br.com.kauanallyson.eleicoes.relatorio.Relatorio;
-import br.com.kauanallyson.eleicoes.relatorio.ResultadoCsvWriter;
 
 void main() throws IOException {
     var apuracao = Apuracao.builder().build();
-    var csv = new ResultadoCsvWriter(Path.of("resultados"));
-    var relatorio = new Relatorio(csv, 5);
+    var relatorio = Relatorio.builder().build();
 
     var resultado = apuracao.apurar();
-    csv.limparResultadosAnteriores();
+    relatorio.limparResultadosAnteriores();
 
     relatorio.votosPorEstado(resultado);
     IO.println();
