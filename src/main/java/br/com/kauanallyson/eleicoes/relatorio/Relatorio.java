@@ -111,6 +111,6 @@ public class Relatorio {
 
     /** Ex.: "1710" para 17:10, para o nome do arquivo deixar claro qual corte foi usado. */
     private String sufixoLimite(ResultadoApuracao resultado) {
-        return resultado.limiteComTolerancia().toString().replace(":", "");
+        return resultado.horario().limite().toString().replace(":", "");
     }
 }

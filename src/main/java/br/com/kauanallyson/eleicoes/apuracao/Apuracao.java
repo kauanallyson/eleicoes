@@ -12,8 +12,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
-import java.time.Duration;
-import java.time.LocalTime;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collector;
@@ -21,19 +19,12 @@ import java.util.stream.Collectors;
 
 public class Apuracao {
 
-    /** Horário oficial de encerramento da votação (Brasília). */
-    public static final LocalTime FIM_DA_VOTACAO = LocalTime.of(17, 0);
-
     private final VotoReader leitor;
-    private final FusoHorario fusoHorario;
-    private final Duration tolerancia;
-    private final LocalTime limiteComTolerancia;
+    private final HorarioDaVotacao horario;
 
     private Apuracao(Builder builder) {
         this.leitor = builder.leitor;
-        this.fusoHorario = builder.fusoHorario;
-        this.tolerancia = builder.tolerancia;
-        this.limiteComTolerancia = FIM_DA_VOTACAO.plus(tolerancia);
+        this.horario = builder.horario;
     }
 
     public static Builder builder() {
@@ -43,12 +34,9 @@ public class Apuracao {
     public static class Builder {
 
         public static final Path DIRETORIO_PADRAO = Path.of("bweb");
-        /** O TSE considera 17h10 o horário estimado para os procedimentos de encerramento da urna. */
-        public static final Duration TOLERANCIA_PADRAO = Duration.ofMinutes(10);
 
         private VotoReader leitor = new VotoReader(DIRETORIO_PADRAO);
-        private FusoHorario fusoHorario = new FusoHorario();
-        private Duration tolerancia = TOLERANCIA_PADRAO;
+        private HorarioDaVotacao horario = HorarioDaVotacao.padrao();
 
         private Builder() { }
 
@@ -62,19 +50,8 @@ public class Apuracao {
             return this;
         }
 
-        public Builder fusoHorario(FusoHorario fusoHorario) {
-            this.fusoHorario = Objects.requireNonNull(fusoHorario, "fusoHorario");
-            return this;
-        }
-
-        /**
-         * Tempo dado ao mesário para encerrar a urna depois do fim da votação; seções que
-         * fecharam dentro dessa tolerância não contam como votação após o fim.
-         */
-        public Builder tolerancia(Duration tolerancia) {
-            Objects.requireNonNull(tolerancia, "tolerancia");
-            if (tolerancia.isNegative()) throw new IllegalArgumentException("tolerância não pode ser negativa: " + tolerancia);
-            this.tolerancia = tolerancia;
+        public Builder horario(HorarioDaVotacao horario) {
+            this.horario = Objects.requireNonNull(horario, "horario");
             return this;
         }
 
@@ -87,7 +64,7 @@ public class Apuracao {
         var estados = leitor.listCsv().parallelStream()
                 .map(this::apurarEstado)
                 .toList();
-        return new ResultadoApuracao(estados, FIM_DA_VOTACAO, tolerancia);
+        return new ResultadoApuracao(estados, horario);
     }
 
     /** Lê o arquivo uma única vez e calcula as duas contas na mesma passada. */
@@ -110,14 +87,14 @@ public class Apuracao {
 
     /**
      * O boletim não registra o horário de cada voto, só o de encerramento da seção.
-     * Separa os votos para Presidente, por candidato, entre seções que encerraram até o fim da votação
-     * com tolerância (false) e depois dele (true), no horário de Brasília.
+     * Separa os votos para Presidente, por candidato, entre seções que encerraram até o limite
+     * (false) e depois dele (true).
      */
     private Collector<Voto, ?, Map<Boolean, Contagem<String>>> votosPorCandidatoAntesEDepoisDoFimDaVotacao() {
         return Collectors.filtering(
                 v -> v.DS_CARGO_PERGUNTA().equals("Presidente") && v.DT_ENCERRAMENTO() != null,
                 Collectors.partitioningBy(
-                        v -> fusoHorario.emBrasilia(v, v.DT_ENCERRAMENTO()).toLocalTime().isAfter(limiteComTolerancia),
+                        v -> horario.encerrouDepoisDoLimite(v.SG_UF(), v.CD_MUNICIPIO(), v.DT_ENCERRAMENTO()),
                         Contagem.por(Voto::NM_VOTAVEL, Voto::QT_VOTOS)));
     }
 

@@ -5,8 +5,6 @@
 
 package br.com.kauanallyson.eleicoes.apuracao;
 
-import br.com.kauanallyson.eleicoes.bweb.Voto;
-
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Map;
@@ -17,7 +15,7 @@ import java.util.Set;
  * Desde 2022 a votação no Brasil segue o horário de Brasília (8h às 17h),
  * então para comparar com o fim da votação é preciso converter.
  */
-public class FusoHorario {
+final class FusoHorario {
 
     private static final ZoneId BRASILIA = ZoneId.of("America/Sao_Paulo");
     private static final ZoneId NORONHA = ZoneId.of("America/Noronha");
@@ -48,15 +46,8 @@ public class FusoHorario {
 
     private static final int FERNANDO_DE_NORONHA = 30015;
 
-    /**
-     * Converte um horário local do boletim para o horário de Brasília.
-     * Seções do exterior (ZZ) votam no horário local do país, então são mantidas como estão.
-     */
-    public LocalDateTime emBrasilia(Voto voto, LocalDateTime horarioLocal) {
-        return emBrasilia(voto.SG_UF(), voto.CD_MUNICIPIO(), horarioLocal);
-    }
-
-    public LocalDateTime emBrasilia(String uf, int municipio, LocalDateTime horarioLocal) {
+    /** Seções do exterior (ZZ) votam no horário local do país, então são mantidas como estão. */
+    LocalDateTime emBrasilia(String uf, int municipio, LocalDateTime horarioLocal) {
         if (uf.equals("ZZ")) return horarioLocal;
 
         return horarioLocal.atZone(fusoDaSecao(uf, municipio))
