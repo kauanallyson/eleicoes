@@ -148,6 +148,10 @@ src/main/java
   `-Xmx256m`.
 - As UFs são apuradas em paralelo com `parallelStream`.
 
+## Contribuindo
+
+Veja o [guia de contribuição](CONTRIBUTING.md).
+
 ## Licença
 
 [MIT](LICENSE) © 2026 Kauan Allyson
