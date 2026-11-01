@@ -44,18 +44,31 @@ mvn compile exec:java -Dexec.mainClass=Main
 
 Ou rode o `Main` direto pelo IntelliJ.
 
-Os parâmetros ficam no `Main.java`. A apuração e o relatório usam builders com valores padrão;
-basta sobrescrever o que for diferente:
+Os parâmetros ficam no `Main.java`:
 
 ```java
+var horario = new HorarioDaVotacao(LocalDate.of(2026, 10, 25), Duration.ofMinutes(10)); // dia e tolerância
+
 var apuracao = Apuracao.builder()
-        .diretorio(Path.of("bweb"))          // padrão: bweb/
-        .tolerancia(Duration.ofMinutes(10))  // padrão: 10 min
+        .fonte(new VotoReader(Path.of("bweb")))
+        .horario(horario)
         .build();
+
 var relatorio = Relatorio.builder()
-        .diretorio(Path.of("resultados"))    // padrão: resultados/
+        .diretorio(Path.of("resultados"))
         .build();
+
+relatorio.gravar(apuracao.apurar());
 ```
+
+## Testes
+
+```sh
+mvn test
+```
+
+Os testes não dependem dos arquivos do TSE: a apuração recebe os votos por uma `FonteDeVotos`, e os
+testes usam um adapter em memória (`FonteEmMemoria`). Os adapters de arquivo (`VotoReader`) são testados com arquivos pequenos gerados no próprio teste.
 
 ## Metodologia
 
@@ -102,19 +115,21 @@ O BU só permite responder à segunda pergunta. A contagem de seções também d
 
 ```
 src/main/java
-├── Main.java                         # instancia as classes e chama as operações
+├── Main.java                         # monta as peças e grava as respostas
 └── br/com/kauanallyson/eleicoes
-    ├── bweb                          # formato do boletim de urna
-    │   ├── Voto.java                 # uma linha do CSV (mapeada com OpenCSV)
-    │   └── VotoReader.java           # lista e lê os CSVs como Stream<Voto>
-    ├── apuracao                      # contagem
-    │   ├── Apuracao.java             # apura cada arquivo em paralelo, numa passada só
-    │   ├── FusoHorario.java          # converte horário local da seção para Brasília
-    │   ├── ResultadoApuracao.java    # resultado de todos os estados + horário de corte
-    │   └── ResultadoEstado.java      # resultado de uma UF
-    └── relatorio                     # apresentação
-        ├── Relatorio.java            # grava o CSV de cada resposta
-        └── ResultadoCsvWriter.java   # grava os CSVs (;, UTF-8, decimal com vírgula)
+    ├── apuracao                      # contagem (não depende dos formatos do TSE)
+    │   ├── FonteDeVotos.java         # de onde vêm os registros de cada UF
+    │   ├── VotosNaSecao.java         # uma linha do boletim de urna
+    │   ├── HorarioDaVotacao.java     # dia, fim da votação, tolerância e fusos horários
+    │   ├── Contagem.java             # votos por chave: total, soma, ordem, percentual
+    │   └── Apuracao.java             # apura os boletins, em paralelo por UF e numa passada só
+    ├── bweb                          # adapter: boletins de urna em CSV (OpenCSV)
+    │   ├── Voto.java
+    │   └── VotoReader.java
+    └── relatorio                     # respostas e gravação
+        ├── Respostas.java            # cada resposta como Tabela, sem I/O
+        ├── Relatorio.java            # grava todas as respostas
+        └── ResultadoCsvWriter.java   # adapter CSV (;, UTF-8, decimal com vírgula)
 ```
 
 ## Desempenho
@@ -122,7 +137,7 @@ src/main/java
 - Cada CSV é lido sob demanda como `Stream` e **uma única vez**: as duas contas são feitas na
   mesma passada com `Collectors.teeing`. A apuração completa (~2 milhões de linhas) roda com
   `-Xmx256m`.
-- Os arquivos são apurados em paralelo com `parallelStream`.
+- As UFs são apuradas em paralelo com `parallelStream`.
 
 ## Licença
 
