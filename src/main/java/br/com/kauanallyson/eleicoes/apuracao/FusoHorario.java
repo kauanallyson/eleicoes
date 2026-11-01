@@ -53,16 +53,21 @@ public class FusoHorario {
      * Seções do exterior (ZZ) votam no horário local do país, então são mantidas como estão.
      */
     public LocalDateTime emBrasilia(Voto voto, LocalDateTime horarioLocal) {
-        if (voto.SG_UF().equals("ZZ")) return horarioLocal;
+        return emBrasilia(voto.SG_UF(), voto.CD_MUNICIPIO(), horarioLocal);
+    }
 
-        return horarioLocal.atZone(fusoDaSecao(voto))
+    /** Mesmo que {@link #emBrasilia(Voto, LocalDateTime)}, a partir da UF e do código TSE do município. */
+    public LocalDateTime emBrasilia(String uf, int municipio, LocalDateTime horarioLocal) {
+        if (uf.equals("ZZ")) return horarioLocal;
+
+        return horarioLocal.atZone(fusoDaSecao(uf, municipio))
                 .withZoneSameInstant(BRASILIA)
                 .toLocalDateTime();
     }
 
-    private ZoneId fusoDaSecao(Voto voto) {
-        if (voto.CD_MUNICIPIO() == FERNANDO_DE_NORONHA) return NORONHA;
-        if (AM_UTC_5.contains(voto.CD_MUNICIPIO())) return OESTE_DO_AMAZONAS;
-        return FUSO_POR_UF.getOrDefault(voto.SG_UF(), BRASILIA);
+    private ZoneId fusoDaSecao(String uf, int municipio) {
+        if (municipio == FERNANDO_DE_NORONHA) return NORONHA;
+        if (AM_UTC_5.contains(municipio)) return OESTE_DO_AMAZONAS;
+        return FUSO_POR_UF.getOrDefault(uf, BRASILIA);
     }
 }
