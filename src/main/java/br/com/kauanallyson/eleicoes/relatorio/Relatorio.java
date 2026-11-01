@@ -102,6 +102,7 @@ public class Relatorio {
                 });
         println(completoEm(arquivo));
         println("===============================");
+        println();
 
         csv.write(arquivo, Stream.concat(
                 Stream.<String[]>of(new String[]{"UF", "CANDIDATO", "VOTOS", "PERCENTUAL"}),
@@ -118,6 +119,7 @@ public class Relatorio {
         total.stream().limit(top).forEach(e -> println("%-20s %,d".formatted(e.getKey().nome(), e.getValue())));
         println(completoEm(arquivo));
         println("===============================");
+        println();
 
         csv.write(arquivo, Stream.concat(
                 Stream.<String[]>of(new String[]{"CANDIDATO", "VOTOS"}),
@@ -146,6 +148,7 @@ public class Relatorio {
                 .forEach(l -> println("%-4s %,12d %7.2f%%".formatted(l.uf(), l.votos(), l.percentual())));
         println(completoEm(arquivo));
         println("===========================================");
+        println();
 
         csv.write(arquivo, Stream.concat(
                 Stream.<String[]>of(new String[]{"UF", "VOTOS_DEPOIS_DO_FIM_DA_VOTACAO", "PERCENTUAL"}),
@@ -189,6 +192,7 @@ public class Relatorio {
         println(formato.formatted(total.candidato(), total.votosAte(), total.percentualAte(), total.votosApos(), total.percentualApos()));
         println(completoEm(arquivo));
         println("=".repeat(62));
+        println();
 
         csv.write(arquivo, Stream.concat(
                 Stream.<String[]>of(new String[]{"CANDIDATO", "VOTOS_ATE_" + s, "PERCENTUAL_ATE_" + s, "VOTOS_APOS_" + s, "PERCENTUAL_APOS_" + s}),

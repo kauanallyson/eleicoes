@@ -23,10 +23,7 @@ void main() throws IOException {
     relatorio.limparResultadosAnteriores();
 
     relatorio.votosPorEstado(resultado);
-    IO.println();
     relatorio.votosTotais(resultado);
-    IO.println();
     relatorio.votosDepoisDoFimDaVotacao(resultado);
-    IO.println();
     relatorio.candidatosAteEDepoisDoFimDaVotacao(resultado);
 }
