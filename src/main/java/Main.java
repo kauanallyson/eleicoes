@@ -5,15 +5,21 @@
 
 import br.com.kauanallyson.eleicoes.apuracao.Apuracao;
 import br.com.kauanallyson.eleicoes.apuracao.HorarioDaVotacao;
-import br.com.kauanallyson.eleicoes.bweb.PreparadorDeBoletins;
+import br.com.kauanallyson.eleicoes.bweb.CatalogoTse;
+import br.com.kauanallyson.eleicoes.bweb.Confirmacao;
+import br.com.kauanallyson.eleicoes.bweb.DownloadDeBoletins;
 import br.com.kauanallyson.eleicoes.bweb.VotoReader;
 import br.com.kauanallyson.eleicoes.relatorio.Relatorio;
 
-void main() throws IOException {
+import java.net.http.HttpClient;
+
+void main(String[] args) throws IOException, InterruptedException {
     var boletins = Path.of("bweb");
-    if ("true".equalsIgnoreCase(System.getenv("ELEICOES_PREPARAR_BOLETINS"))) {
-        new PreparadorDeBoletins(boletins).preparar();
-    }
+    var http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
+
+    var download = new DownloadDeBoletins(
+            boletins, CatalogoTse.segundoTurno2026(http), Confirmacao.doTerminal(args), http, IO::println);
+    if (!download.garantir()) return;
 
     var horario = new HorarioDaVotacao(LocalDate.of(2026, 10, 25), Duration.ofMinutes(10));
 
