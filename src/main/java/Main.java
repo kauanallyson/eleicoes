@@ -16,7 +16,6 @@ void main() throws IOException {
 
     var relatorio = Relatorio.builder()
             .diretorio(Path.of("resultados"))
-            .top(5)
             .build();
 
     var resultado = apuracao.apurar();

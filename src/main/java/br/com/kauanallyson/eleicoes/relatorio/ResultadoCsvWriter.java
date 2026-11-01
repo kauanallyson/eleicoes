@@ -50,7 +50,7 @@ public class ResultadoCsvWriter {
         }
     }
 
-    Path caminho(String arquivo) {
+    private Path caminho(String arquivo) {
         return diretorio.resolve(arquivo);
     }
 
