@@ -1,4 +1,4 @@
-# Eleições 2026 — Apuração do 2º turno
+# Eleições gerais: apuração dos boletins de urna do TSE
 
 Apuração dos votos para Presidente no 2º turno das Eleições Gerais de 2026 a partir dos
 **boletins de urna (BU)** publicados pelo TSE, um CSV por UF mais o exterior (`ZZ`).
@@ -25,7 +25,7 @@ gerados com tolerâncias diferentes. A cada execução os CSVs anteriores de `re
 
 Coloque os boletins de urna em `bweb/`, um arquivo por UF (`AC.csv`, `AL.csv`, ..., `ZZ.csv`).
 
-Fonte: [Portal de Dados Abertos do TSE — Resultados 2026: Boletim de Urna](https://dadosabertos.tse.jus.br/dataset/resultados-2026-boletim-de-urna)
+Fonte: [Portal de Dados Abertos do TSE: Resultados 2026, Boletim de Urna](https://dadosabertos.tse.jus.br/dataset/resultados-2026-boletim-de-urna)
 (arquivos do 2º turno, um `.zip` por UF).
 
 Os arquivos têm separador `;` e o cabeçalho
@@ -99,8 +99,8 @@ testes usam um adapter em memória (`FonteEmMemoria`). Os adapters de arquivo (`
 
 ### Comparação com o número oficial do TSE
 
-Segundo o TSE, apenas **34.393 votos** foram registrados após as 17h no 2º turno — 32.399
-entre 17h e 18h, 1.981 entre 18h e 19h e 13 após as 19h —, o equivalente a 0,027% dos votos
+Segundo o TSE, apenas **34.393 votos** foram registrados após as 17h no 2º turno (32.399
+entre 17h e 18h, 1.981 entre 18h e 19h e 13 após as 19h), o equivalente a 0,027% dos votos
 do dia ([TSE][tse-34mil], [Agência Brasil][agencia-brasil]). A votação foi estendida até as 19h
 nas seções que ainda funcionavam às 17h, por decisão do ministro Cristiano Zanin, do STF.
 
