@@ -25,7 +25,10 @@ gerados com tolerâncias diferentes. A cada execução os CSVs anteriores de `re
 
 Coloque os boletins de urna em `bweb/`, um arquivo por UF (`AC.csv`, `AL.csv`, ..., `ZZ.csv`).
 
-Os arquivos são os do TSE (*Boletim de urna — 2º turno*), com separador `;` e o cabeçalho
+Fonte: [Portal de Dados Abertos do TSE — Resultados 2026: Boletim de Urna](https://dadosabertos.tse.jus.br/dataset/resultados-2026-boletim-de-urna)
+(arquivos do 2º turno, um `.zip` por UF).
+
+Os arquivos têm separador `;` e o cabeçalho
 original (`DT_GERACAO;HH_GERACAO;ANO_ELEICAO;...`). O TSE publica em **Latin-1 (ISO-8859-1)**;
 o programa lê em **UTF-8**, então converta antes:
 
