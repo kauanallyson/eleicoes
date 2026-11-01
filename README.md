@@ -3,8 +3,8 @@
 Apuração dos votos para Presidente no 2º turno das Eleições Gerais de 2026 a partir dos
 **boletins de urna (BU)** publicados pelo TSE, um CSV por UF mais o exterior (`ZZ`).
 
-O programa responde a quatro perguntas e mostra no terminal o top de cada uma; o resultado
-completo de cada resposta é gravado em CSV na pasta `resultados/`:
+O programa responde a quatro perguntas e grava cada resposta em um CSV na pasta `resultados/`
+(não imprime nada no terminal):
 
 | Resposta | Arquivo |
 |---|---|
@@ -54,7 +54,6 @@ var apuracao = Apuracao.builder()
         .build();
 var relatorio = Relatorio.builder()
         .diretorio(Path.of("resultados"))    // padrão: resultados/
-        .top(5)                              // padrão: 5 linhas de cada resposta no terminal
         .build();
 ```
 
@@ -114,7 +113,7 @@ src/main/java
     │   ├── ResultadoApuracao.java    # resultado de todos os estados + horário de corte
     │   └── ResultadoEstado.java      # resultado de uma UF
     └── relatorio                     # apresentação
-        ├── Relatorio.java            # imprime o top e grava o CSV de cada resposta
+        ├── Relatorio.java            # grava o CSV de cada resposta
         └── ResultadoCsvWriter.java   # grava os CSVs (;, UTF-8, decimal com vírgula)
 ```
 
