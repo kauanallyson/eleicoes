@@ -29,10 +29,21 @@ Fonte: [Portal de Dados Abertos do TSE — Resultados 2026: Boletim de Urna](htt
 (arquivos do 2º turno, um `.zip` por UF).
 
 Os arquivos têm separador `;` e o cabeçalho
-original (`DT_GERACAO;HH_GERACAO;ANO_ELEICAO;...`). O TSE publica em **Latin-1 (ISO-8859-1)**;
-o programa lê em **UTF-8**, então converta antes:
+original (`DT_GERACAO;HH_GERACAO;ANO_ELEICAO;...`). O TSE publica em **Latin-1 (ISO-8859-1)**,
+e o programa lê em **UTF-8**.
+
+O jeito mais simples é colocar os `.zip` do TSE em `bweb/`, sem descompactar, e rodar com
+`ELEICOES_PREPARAR_BOLETINS=true`: antes da apuração, cada `bweb_2t_UF_<data>.zip` vira `bweb/UF.csv`
+já em UTF-8 (o `leiame.pdf` é ignorado e um `UF.csv` antigo é substituído).
 
 ```sh
+ELEICOES_PREPARAR_BOLETINS=true mvn compile exec:java -Dexec.mainClass=Main
+```
+
+Sem a variável, o programa lê os `bweb/UF.csv` como estiverem. Para preparar à mão:
+
+```sh
+unzip bweb_2t_SP_261020260742.zip
 iconv -f latin1 -t utf-8 bweb_2t_SP_261020260742.csv > bweb/SP.csv
 ```
 
