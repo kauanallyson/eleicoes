@@ -5,13 +5,14 @@
 
 import br.com.kauanallyson.eleicoes.apuracao.Apuracao;
 import br.com.kauanallyson.eleicoes.apuracao.HorarioDaVotacao;
+import br.com.kauanallyson.eleicoes.bweb.VotoReader;
 import br.com.kauanallyson.eleicoes.relatorio.Relatorio;
 
 void main() throws IOException {
     var horario = new HorarioDaVotacao(LocalDate.of(2026, 10, 25), Duration.ofMinutes(10));
 
     var apuracao = Apuracao.builder()
-            .diretorio(Path.of("bweb"))
+            .fonte(new VotoReader(Path.of("bweb")))
             .horario(horario)
             .build();
 
