@@ -44,16 +44,18 @@ mvn compile exec:java -Dexec.mainClass=Main
 
 Ou rode o `Main` direto pelo IntelliJ.
 
-Os parâmetros ficam no `Main.java`. A apuração usa um builder com valores padrão
-(boletins em `bweb/` e tolerância de 10 min); basta sobrescrever o que for diferente:
+Os parâmetros ficam no `Main.java`. A apuração e o relatório usam builders com valores padrão;
+basta sobrescrever o que for diferente:
 
 ```java
 var apuracao = Apuracao.builder()
         .diretorio(Path.of("bweb"))          // padrão: bweb/
         .tolerancia(Duration.ofMinutes(10))  // padrão: 10 min
         .build();
-var csv = new ResultadoCsvWriter(Path.of("resultados"));
-var relatorio = new Relatorio(csv, 5); // quantas linhas de cada resposta aparecem no terminal
+var relatorio = Relatorio.builder()
+        .diretorio(Path.of("resultados"))    // padrão: resultados/
+        .top(5)                              // padrão: 5 linhas de cada resposta no terminal
+        .build();
 ```
 
 ## Metodologia
