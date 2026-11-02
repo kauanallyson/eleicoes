@@ -6,9 +6,6 @@
 package br.com.kauanallyson.eleicoes.bweb;
 
 import com.opencsv.bean.CsvBindByName;
-import com.opencsv.bean.CsvDate;
-
-import java.time.LocalDateTime;
 
 /**
  * Uma linha do boletim de urna (bweb), só com as colunas que a apuração usa; o OpenCSV ignora as demais
@@ -33,14 +30,14 @@ public class Voto {
     private int QT_VOTOS;
 
     /** Vazio nas linhas sem seção (ex.: juntas apuradoras do exterior). */
+    /** Texto: o formato da data muda de ano para ano, e quem converte é o {@link VotoReader}. */
     @CsvBindByName(column = "DT_ENCERRAMENTO")
-    @CsvDate("yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime DT_ENCERRAMENTO;
+    private String DT_ENCERRAMENTO;
 
     public String SG_UF() { return SG_UF; }
     public int CD_MUNICIPIO() { return CD_MUNICIPIO; }
     public String DS_CARGO_PERGUNTA() { return DS_CARGO_PERGUNTA; }
     public String NM_VOTAVEL() { return NM_VOTAVEL; }
     public int QT_VOTOS() { return QT_VOTOS; }
-    public LocalDateTime DT_ENCERRAMENTO() { return DT_ENCERRAMENTO; }
+    public String DT_ENCERRAMENTO() { return DT_ENCERRAMENTO; }
 }
