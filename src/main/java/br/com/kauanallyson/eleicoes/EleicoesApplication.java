@@ -44,11 +44,13 @@ public class EleicoesApplication {
                     .boletins(new VotoReader(boletins))
                     .eleicao(eleicao)
                     .tolerancia(Duration.ofMinutes(10))
+                    .log(IO::println)
                     .build();
 
             var relatorio = Relatorio.builder()
                     .diretorio(resultados)
                     .tipos(params.relatorios())
+                    .log(IO::println)
                     .build();
 
             relatorio.gravar(apuracao.apurar());

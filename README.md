@@ -3,7 +3,8 @@
 Apuração dos votos para Presidente no 2º turno das Eleições Gerais de 2026 a partir dos
 **boletins de urna (BU)** publicados pelo TSE, um CSV por UF mais o exterior (`ZZ`).
 
-O programa gera quatro relatórios, cada um num CSV na pasta `resultados/` (não imprime nada no terminal).
+O programa gera quatro relatórios, cada um num CSV na pasta `resultados/`; no terminal mostra o andamento
+da apuração e da gravação em %.
 Por padrão saem todos; para escolher, use `--relatorios` com os nomes separados por vírgula:
 
 | `--relatorios=` | Relatório | Arquivo |

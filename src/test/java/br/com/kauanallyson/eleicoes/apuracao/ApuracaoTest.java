@@ -12,6 +12,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -66,6 +67,21 @@ class ApuracaoTest {
         assertEquals(List.of("AC", "SP"), resultado.estados().stream().map(ResultadoEstado::uf).toList());
         assertEquals(Contagem.de(Map.of("A", 12L, "B", 4L)),
                 resultado.somarEstados(ResultadoEstado::votos));
+    }
+
+    @Test
+    void logaOAndamentoEmPercentualAte100() throws Exception {
+        var log = new CopyOnWriteArrayList<String>();
+        var porUf = Map.of(
+                "AC", List.of(presidente("AC", "A", 1, DIA.atTime(15, 0))),
+                "PE", List.of(presidente("PE", "A", 1, DIA.atTime(15, 0))),
+                "SP", List.of(presidente("SP", "A", 1, DIA.atTime(15, 0))),
+                "ZZ", List.of(presidente("ZZ", "A", 1, null)));
+
+        Apuracao.builder().boletins(new FonteEmMemoria<>(porUf)).eleicao(new Eleicao(2026, 2)).log(log::add).build().apurar();
+
+        assertEquals(List.of(" 25% (1/4 UFs)", " 50% (2/4 UFs)", " 75% (3/4 UFs)", "100% (4/4 UFs)"),
+                log.stream().map(l -> l.substring("[apuração] ".length(), l.lastIndexOf(' '))).toList());
     }
 
     @Test
