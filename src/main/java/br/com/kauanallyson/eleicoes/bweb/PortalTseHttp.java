@@ -19,6 +19,7 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HexFormat;
@@ -35,6 +36,11 @@ import java.util.regex.Pattern;
 public class PortalTseHttp implements PortalTse {
 
     private static final int TENTATIVAS = 5;
+    /**
+     * Limite para cada resposta chegar. No download, vale até os cabeçalhos: o corpo (centenas de MB) é lido
+     * depois, sem limite. Estourar o limite é uma {@link IOException}, então o download tenta de novo.
+     */
+    static final Duration TEMPO_LIMITE = Duration.ofSeconds(30);
 
     private final HttpClient http;
     private final URI api;
@@ -58,7 +64,7 @@ public class PortalTseHttp implements PortalTse {
     /** Em 2018 os pacotes se chamam {@code BWEB_...}; nos outros anos, {@code bweb_...}. */
     @Override
     public List<PacoteTse> pacotes() throws IOException, InterruptedException {
-        var resposta = http.send(HttpRequest.newBuilder(api).GET().build(), HttpResponse.BodyHandlers.ofString());
+        var resposta = http.send(pedido(api).GET().build(), HttpResponse.BodyHandlers.ofString());
         if (resposta.statusCode() != 200) {
             throw new IOException("Catálogo do TSE respondeu " + resposta.statusCode() + ": " + api);
         }
@@ -77,7 +83,7 @@ public class PortalTseHttp implements PortalTse {
 
     @Override
     public PacoteTse comTamanho(PacoteTse pacote) throws IOException, InterruptedException {
-        var head = HttpRequest.newBuilder(pacote.zip()).method("HEAD", HttpRequest.BodyPublishers.noBody()).build();
+        var head = pedido(pacote.zip()).method("HEAD", HttpRequest.BodyPublishers.noBody()).build();
         return pacote.comTamanho(http.send(head, HttpResponse.BodyHandlers.discarding()).headers()
                 .firstValueAsLong("content-length").orElse(PacoteTse.TAMANHO_DESCONHECIDO));
     }
@@ -94,7 +100,7 @@ public class PortalTseHttp implements PortalTse {
             long jaBaixado = Files.exists(destino) ? Files.size(destino) : 0;
             if (pacote.tamanho() > 0 && jaBaixado == pacote.tamanho()) return;
 
-            var pedido = HttpRequest.newBuilder(pacote.zip()).GET();
+            var pedido = pedido(pacote.zip()).GET();
             if (jaBaixado > 0) pedido.header("Range", "bytes=" + jaBaixado + "-");
             try {
                 var resposta = http.send(pedido.build(), HttpResponse.BodyHandlers.ofInputStream());
@@ -123,7 +129,7 @@ public class PortalTseHttp implements PortalTse {
 
     /** O .sha512 do TSE tem o formato do sha512sum: "{@code <hash>  <arquivo>}". */
     private void conferirHash(PacoteTse pacote, Path zip) throws IOException, InterruptedException {
-        var resposta = http.send(HttpRequest.newBuilder(pacote.sha512()).GET().build(), HttpResponse.BodyHandlers.ofString());
+        var resposta = http.send(pedido(pacote.sha512()).GET().build(), HttpResponse.BodyHandlers.ofString());
         if (resposta.statusCode() != 200) {
             throw new IOException("TSE respondeu " + resposta.statusCode() + " para " + pacote.sha512());
         }
@@ -132,6 +138,10 @@ public class PortalTseHttp implements PortalTse {
             Files.delete(zip);
             throw new IOException("SHA-512 de " + pacote.nomeDoArquivo() + " não confere com o publicado pelo TSE");
         }
+    }
+
+    private static HttpRequest.Builder pedido(URI uri) {
+        return HttpRequest.newBuilder(uri).timeout(TEMPO_LIMITE);
     }
 
     private static String sha512(Path arquivo) throws IOException {

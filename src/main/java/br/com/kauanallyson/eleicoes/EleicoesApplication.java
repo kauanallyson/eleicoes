@@ -36,7 +36,10 @@ public class EleicoesApplication {
 
             var boletins = Path.of("bweb").resolve(eleicao.pasta());
             var resultados = Path.of("resultados").resolve(eleicao.pasta());
-            var http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).build();
+            var http = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(30))
+                    .followRedirects(HttpClient.Redirect.NORMAL)
+                    .build();
 
             var portal = PortalTseHttp.boletins(http, eleicao, IO::println);
             var download = new DownloadDeBoletins(boletins, portal, TerminalConfirmation.of(params.autoConfirm()), IO::println);
