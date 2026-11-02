@@ -6,18 +6,26 @@
 package br.com.kauanallyson.eleicoes.bweb;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /**
  * Garante que a pasta tem o {@code UF.csv} de cada UF publicada pelo TSE: baixa só o que falta, depois de
  * mostrar o tamanho e pedir confirmação. Quando a pasta fica completa, grava um marcador e as execuções
  * seguintes não consultam mais o TSE (funcionam sem internet).
+ *
+ * <p>As UFs são baixadas ao mesmo tempo, uma virtual thread por UF: o tempo é dominado pela rede, não pela CPU.
+ * Se uma UF falhar, as outras são canceladas e a exceção dela é relançada.
  */
 public class DownloadDeBoletins {
 
@@ -48,10 +56,8 @@ public class DownloadDeBoletins {
             return true;
         }
 
-        var faltando = new ArrayList<PacoteTse>();
-        for (var pacote : portal.pacotes()) {
-            if (!presentes.contains(pacote.uf())) faltando.add(portal.comTamanho(pacote));
-        }
+        var faltando = emParalelo(portal.pacotes().stream().filter(p -> !presentes.contains(p.uf())).toList(),
+                portal::comTamanho);
         if (faltando.isEmpty()) {
             log.accept("boletins de urna de %d UFs já estão em %s".formatted(presentes.size(), diretorio));
             marcarCompleto();
@@ -71,23 +77,57 @@ public class DownloadDeBoletins {
         }
 
         var temporarios = Files.createDirectories(diretorio.resolve(".download"));
-        for (int i = 0; i < faltando.size(); i++) {
-            var pacote = faltando.get(i);
-            log.accept("(%d/%d) %s  %s  %s ...".formatted(i + 1, faltando.size(), pacote.uf(), pacote.nomeDoArquivo(),
-                    tamanho(pacote.tamanho())));
+        log.accept("baixando %d UF(s) ao mesmo tempo ...".formatted(faltando.size()));
+        var prontas = new AtomicInteger();
+        emParalelo(faltando, pacote -> {
             var zip = temporarios.resolve(pacote.nomeDoArquivo());
             portal.baixar(pacote, zip);
             preparador.preparar(zip, pacote.uf());
             Files.delete(zip);
-            log.accept("(%d/%d) %s ok: SHA-512 confere, convertido para UTF-8 em %s".formatted(i + 1, faltando.size(),
-                    pacote.uf(), diretorio.resolve(pacote.uf() + ".csv")));
-        }
+            log.accept("(%d/%d) %s ok: %s, SHA-512 confere, convertido para UTF-8".formatted(prontas.incrementAndGet(),
+                    faltando.size(), pacote.uf(), tamanho(pacote.tamanho())));
+            return pacote;
+        });
         try (var sobras = Files.list(temporarios)) {
             if (sobras.findAny().isEmpty()) Files.delete(temporarios);
         }
         log.accept("%d UF(s) prontas em %s".formatted(faltando.size(), diretorio));
         marcarCompleto();
         return true;
+    }
+
+    private interface Tarefa {
+        PacoteTse executar(PacoteTse pacote) throws IOException, InterruptedException;
+    }
+
+    /**
+     * Uma virtual thread por pacote; devolve os resultados na ordem da entrada. Na primeira falha cancela as
+     * tarefas que ainda estão rodando e relança a exceção original.
+     */
+    private static List<PacoteTse> emParalelo(List<PacoteTse> pacotes, Tarefa tarefa) throws IOException, InterruptedException {
+        try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            List<Future<PacoteTse>> futuros = pacotes.stream()
+                    .map(pacote -> executor.submit(() -> tarefa.executar(pacote)))
+                    .toList();
+            try {
+                var resultados = new ArrayList<PacoteTse>();
+                for (var futuro : futuros) resultados.add(futuro.get());
+                return resultados;
+            } catch (ExecutionException e) {
+                futuros.forEach(f -> f.cancel(true));
+                switch (e.getCause()) {
+                    case IOException io -> throw io;
+                    case UncheckedIOException io -> throw io.getCause();
+                    case InterruptedException interrompida -> throw interrompida;
+                    case RuntimeException runtime -> throw runtime;
+                    case Error erro -> throw erro;
+                    default -> throw new IllegalStateException(e.getCause());
+                }
+            } catch (InterruptedException e) {
+                futuros.forEach(f -> f.cancel(true));
+                throw e;
+            }
+        }
     }
 
     private void marcarCompleto() throws IOException {
