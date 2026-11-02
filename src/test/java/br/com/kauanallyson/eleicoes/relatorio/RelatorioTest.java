@@ -28,7 +28,8 @@ class RelatorioTest {
     void semEscolherGravaTodos(@TempDir Path dir) throws Exception {
         Relatorio.builder().diretorio(dir).build().gravar(RespostasTest.boletins());
 
-        assertEquals(List.of("candidatos_ate_e_apos_fim_da_votacao_1710.csv", "votos_depois_do_fim_da_votacao_1710.csv",
+        assertEquals(List.of("candidatos_ate_e_apos_fim_da_votacao_1710.csv", "comparecimento_e_abstencao_por_estado.csv",
+                "votos_depois_do_fim_da_votacao_1710.csv",
                 "votos_por_estado.csv", "votos_totais.csv"), arquivos(dir));
     }
 

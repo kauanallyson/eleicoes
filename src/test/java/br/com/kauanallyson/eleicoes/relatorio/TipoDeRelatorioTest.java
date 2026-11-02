@@ -21,7 +21,7 @@ class TipoDeRelatorioTest {
         var arquivos = Arrays.stream(TipoDeRelatorio.values()).map(t -> t.gerar(RespostasTest.boletins()).nome()).toList();
 
         assertEquals(List.of("votos_por_estado.csv", "votos_totais.csv", "votos_depois_do_fim_da_votacao_1710.csv",
-                "candidatos_ate_e_apos_fim_da_votacao_1710.csv"), arquivos);
+                "candidatos_ate_e_apos_fim_da_votacao_1710.csv", "comparecimento_e_abstencao_por_estado.csv"), arquivos);
     }
 
     @Test

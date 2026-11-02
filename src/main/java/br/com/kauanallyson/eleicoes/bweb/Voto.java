@@ -20,6 +20,12 @@ public class Voto {
     @CsvBindByName(column = "CD_MUNICIPIO")
     private int CD_MUNICIPIO;
 
+    @CsvBindByName(column = "NR_ZONA")
+    private int NR_ZONA;
+
+    @CsvBindByName(column = "NR_SECAO")
+    private int NR_SECAO;
+
     @CsvBindByName(column = "DS_CARGO_PERGUNTA")
     private String DS_CARGO_PERGUNTA;
 
@@ -29,6 +35,12 @@ public class Voto {
     @CsvBindByName(column = "QT_VOTOS")
     private int QT_VOTOS;
 
+    @CsvBindByName(column = "QT_APTOS")
+    private int QT_APTOS;
+
+    @CsvBindByName(column = "QT_COMPARECIMENTO")
+    private int QT_COMPARECIMENTO;
+
     /** Vazio nas linhas sem seção (ex.: juntas apuradoras do exterior). */
     /** Texto: o formato da data muda de ano para ano, e quem converte é o {@link VotoReader}. */
     @CsvBindByName(column = "DT_ENCERRAMENTO")
@@ -36,8 +48,12 @@ public class Voto {
 
     public String SG_UF() { return SG_UF; }
     public int CD_MUNICIPIO() { return CD_MUNICIPIO; }
+    public int NR_ZONA() { return NR_ZONA; }
+    public int NR_SECAO() { return NR_SECAO; }
     public String DS_CARGO_PERGUNTA() { return DS_CARGO_PERGUNTA; }
     public String NM_VOTAVEL() { return NM_VOTAVEL; }
     public int QT_VOTOS() { return QT_VOTOS; }
+    public int QT_APTOS() { return QT_APTOS; }
+    public int QT_COMPARECIMENTO() { return QT_COMPARECIMENTO; }
     public String DT_ENCERRAMENTO() { return DT_ENCERRAMENTO; }
 }

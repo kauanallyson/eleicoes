@@ -72,8 +72,8 @@ public class VotoReader implements FonteDeVotos<VotosNaSecao> {
     }
 
     private static VotosNaSecao paraDominio(Voto v) {
-        return new VotosNaSecao(v.SG_UF(), v.CD_MUNICIPIO(), v.DS_CARGO_PERGUNTA(), v.NM_VOTAVEL(), v.QT_VOTOS(),
-                dataHora(v.DT_ENCERRAMENTO()));
+        return new VotosNaSecao(v.SG_UF(), v.CD_MUNICIPIO(), v.NR_ZONA(), v.NR_SECAO(), v.DS_CARGO_PERGUNTA(),
+                v.NM_VOTAVEL(), v.QT_VOTOS(), v.QT_APTOS(), v.QT_COMPARECIMENTO(), dataHora(v.DT_ENCERRAMENTO()));
     }
 
     /** Vazio nas linhas sem seção (ex.: juntas apuradoras do exterior). */
