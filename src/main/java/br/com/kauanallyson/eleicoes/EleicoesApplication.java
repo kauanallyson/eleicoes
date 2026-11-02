@@ -18,6 +18,7 @@ import java.io.UncheckedIOException;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Locale;
 
 /**
  * Uso: {@code [--ano=2026] [--turno=1|2] [--relatorios=nome,nome...] [--sim]}; veja {@link Params}.
@@ -27,6 +28,7 @@ import java.time.Duration;
 public class EleicoesApplication {
 
     public static void main(String[] args) {
+        long inicio = System.nanoTime();
         try {
             var params = Params.parse(args);
             var eleicao = params.eleicao();
@@ -54,6 +56,7 @@ public class EleicoesApplication {
                     .build();
 
             relatorio.gravar(apuracao.apurar());
+            IO.println("[tempo] total: " + duracao(Duration.ofNanos(System.nanoTime() - inicio)));
         } catch (IllegalArgumentException e) {
             erro(e);
             CodigoDeSaida.USO_INVALIDO.sair();
@@ -65,6 +68,12 @@ public class EleicoesApplication {
             erro(e);
             CodigoDeSaida.FALHOU.sair();
         }
+    }
+
+    /** Ex.: "4,8 s" ou "2 min 29 s". */
+    static String duracao(Duration d) {
+        if (d.toMinutes() == 0) return String.format(Locale.of("pt", "BR"), "%.1f s", d.toMillis() / 1000.0);
+        return "%d min %d s".formatted(d.toMinutes(), d.toSecondsPart());
     }
 
     private static void erro(Exception e) {
