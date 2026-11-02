@@ -20,10 +20,10 @@ public class Voto {
     @CsvBindByName(column = "CD_MUNICIPIO")
     private int CD_MUNICIPIO;
 
-    @CsvBindByName(column = "NR_ZONA")
+    @CsvBindByName(column = "NR_ZONA", required = true)
     private int NR_ZONA;
 
-    @CsvBindByName(column = "NR_SECAO")
+    @CsvBindByName(column = "NR_SECAO", required = true)
     private int NR_SECAO;
 
     @CsvBindByName(column = "DS_CARGO_PERGUNTA")
@@ -35,10 +35,10 @@ public class Voto {
     @CsvBindByName(column = "QT_VOTOS")
     private int QT_VOTOS;
 
-    @CsvBindByName(column = "QT_APTOS")
+    @CsvBindByName(column = "QT_APTOS", required = true)
     private int QT_APTOS;
 
-    @CsvBindByName(column = "QT_COMPARECIMENTO")
+    @CsvBindByName(column = "QT_COMPARECIMENTO", required = true)
     private int QT_COMPARECIMENTO;
 
     /** Vazio nas linhas sem seção (ex.: juntas apuradoras do exterior). */
