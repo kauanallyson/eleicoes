@@ -27,7 +27,7 @@ class ResultadoCsvWriterTest {
 
         assertFalse(Files.exists(dir.resolve("antigo_1715.csv")));
         assertEquals("fica", Files.readString(dir.resolve("anotacoes.txt")));
-        assertEquals("\"NOME\";\"VOTOS\";\"PERCENTUAL\";\"OK\"\n\"LULA\";\"64256232\";\"50,04\";\"SIM\"\n",
+        assertEquals("\"NOME\";\"VOTOS\";\"PERCENTUAL\";\"OK\"\n\"LULA\";\"64256232\";\"50.04\";\"SIM\"\n",
                 Files.readString(dir.resolve("t.csv")));
     }
 }

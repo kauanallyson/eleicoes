@@ -154,7 +154,7 @@ src/main/java
         ├── TipoDeRelatorio.java      # o catálogo: nome em --relatorios, descrição e a Tabela
         ├── Respostas.java            # como cada relatório monta a sua Tabela, sem I/O
         ├── Relatorio.java            # grava todas as respostas
-        └── ResultadoCsvWriter.java   # adapter CSV (;, UTF-8, decimal com vírgula)
+        └── ResultadoCsvWriter.java   # adapter CSV (;, UTF-8, decimal com ponto)
 ```
 
 ## Desempenho

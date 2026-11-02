@@ -16,10 +16,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
 
-/** Grava as tabelas em CSV no mesmo padrão do TSE: separador ';', UTF-8 e decimal com vírgula. */
+/** Grava as tabelas em CSV com separador ';' (como o TSE), UTF-8 e decimal com ponto, para ser lido direto por código. */
 public class ResultadoCsvWriter {
 
-    private static final Locale PT_BR = Locale.of("pt", "BR");
 
     private final Path diretorio;
 
@@ -59,7 +58,7 @@ public class ResultadoCsvWriter {
 
     private String celula(Object valor) {
         return switch (valor) {
-            case Percentual percentual -> String.format(PT_BR, "%.2f", percentual.valor());
+            case Percentual percentual -> String.format(Locale.ROOT, "%.2f", percentual.valor());
             case Boolean sim -> sim ? "SIM" : "NAO";
             default -> String.valueOf(valor);
         };
