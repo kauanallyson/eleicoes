@@ -39,7 +39,11 @@ class DownloadDeBoletinsTest {
     private final List<String> log = new CopyOnWriteArrayList<>();
 
     private DownloadDeBoletins download(Path dir, Confirmation confirmation) {
-        return new DownloadDeBoletins(dir, portal, confirmation, log::add);
+        return download(dir, 2, confirmation);
+    }
+
+    private DownloadDeBoletins download(Path dir, int turno, Confirmation confirmation) {
+        return new DownloadDeBoletins(dir, turno, portal, confirmation, log::add);
     }
 
     @Test
@@ -61,6 +65,20 @@ class DownloadDeBoletinsTest {
             assertTrue(log.stream().anyMatch(l -> l.startsWith("[dados] download: ") && l.contains("(2 arquivos .zip)")), log::toString);
             return false;
         }).garantir();
+    }
+
+    /** 1º turno tem todos os cargos (deputados, senador, governador): o CSV fica bem maior. */
+    @Test
+    void estimaOEspacoPeloTurno(@TempDir Path dir) throws Exception {
+        portal.tamanhoInformado = 100_000_000L;
+
+        download(dir, 1, question -> false).garantir();
+        download(dir, 2, question -> false).garantir();
+
+        var estimativas = log.stream().filter(l -> l.startsWith("[dados] download: ")).toList();
+        assertEquals(2, estimativas.size(), log::toString);
+        assertTrue(estimativas.get(0).endsWith("depois de descompactar: ~4,8 GB"), estimativas.get(0));
+        assertTrue(estimativas.get(1).endsWith("depois de descompactar: ~1,3 GB"), estimativas.get(1));
     }
 
     @Test
@@ -133,6 +151,8 @@ class DownloadDeBoletinsTest {
         private volatile String ufLenta;
         /** Falha na hora. */
         private volatile String ufQueFalha;
+        /** Se presente, o tamanho de cada .zip informado antes do download, no lugar do tamanho real. */
+        private volatile Long tamanhoInformado;
 
         private PortalEmMemoria(Map<String, byte[]> zips) {
             this.zips = zips;
@@ -150,7 +170,7 @@ class DownloadDeBoletinsTest {
         @Override
         public PacoteTse comTamanho(PacoteTse pacote) {
             chamadas.add("tamanho " + pacote.uf());
-            return pacote.comTamanho(zips.get(pacote.uf()).length);
+            return pacote.comTamanho(tamanhoInformado != null ? tamanhoInformado : zips.get(pacote.uf()).length);
         }
 
         @Override
