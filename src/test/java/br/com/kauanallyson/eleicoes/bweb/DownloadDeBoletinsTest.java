@@ -17,6 +17,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -89,6 +91,15 @@ class DownloadDeBoletinsTest {
     }
 
     @Test
+    void baixaAsUfsAoMesmoTempo(@TempDir Path dir) throws Exception {
+        portal.todasBaixando = new CountDownLatch(2);
+
+        assertTrue(download(dir, question -> true).garantir());
+
+        assertTrue(Files.exists(dir.resolve("AC.csv")) && Files.exists(dir.resolve("SP.csv")));
+    }
+
+    @Test
     void erroNoDownloadNaoDeixaCsv(@TempDir Path dir) throws Exception {
         Files.writeString(dir.resolve("SP.csv"), "x");
         portal.falharAoBaixar = true;
@@ -101,7 +112,9 @@ class DownloadDeBoletinsTest {
 
         private final Map<String, byte[]> zips;
         private final List<String> chamadas = new CopyOnWriteArrayList<>();
-        private boolean falharAoBaixar;
+        private volatile boolean falharAoBaixar;
+        /** Se presente, cada download só termina depois que todos começaram: em série, nunca terminaria. */
+        private volatile CountDownLatch todasBaixando;
 
         private PortalEmMemoria(Map<String, byte[]> zips) {
             this.zips = zips;
@@ -126,6 +139,14 @@ class DownloadDeBoletinsTest {
         public void baixar(PacoteTse pacote, Path destino) throws IOException {
             chamadas.add("baixar " + pacote.uf());
             if (falharAoBaixar) throw new IOException("SHA-512 não confere");
+            if (todasBaixando != null) {
+                todasBaixando.countDown();
+                try {
+                    if (!todasBaixando.await(5, TimeUnit.SECONDS)) throw new IOException("as UFs não foram baixadas ao mesmo tempo");
+                } catch (InterruptedException e) {
+                    throw new IOException(e);
+                }
+            }
             Files.write(destino, zips.get(pacote.uf()));
         }
     }

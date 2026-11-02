@@ -34,7 +34,7 @@ e o programa lê em **UTF-8**.
 
 Não é preciso baixar nada à mão: se `bweb/<ano>/<turno>t/` não tiver os boletins, o programa consulta
 o catálogo do TSE, mostra quais UFs faltam e o tamanho do download, e **pede confirmação**. Depois baixa
-cada `.zip`, confere o SHA-512 publicado pelo TSE, converte para UTF-8 e grava `bweb/<ano>/<turno>t/UF.csv`.
+os `.zip` das UFs ao mesmo tempo (uma virtual thread por UF), confere o SHA-512 publicado pelo TSE, converte para UTF-8 e grava `bweb/<ano>/<turno>t/UF.csv`.
 Com a pasta completa, as execuções seguintes não consultam mais o TSE.
 
 ```sh
@@ -157,6 +157,8 @@ src/main/java
 
 ## Desempenho
 
+- O download baixa todas as UFs ao mesmo tempo, uma virtual thread por UF: o tempo é dominado pela rede, e
+  as UFs pequenas não esperam as grandes. Se uma falhar, as outras são canceladas.
 - Cada CSV é lido sob demanda como `Stream` e **uma única vez**: as duas contas são feitas na
   mesma passada com `Collectors.teeing`. A apuração completa (~2 milhões de linhas) roda com
   `-Xmx256m`.
