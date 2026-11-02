@@ -9,11 +9,11 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -101,18 +101,18 @@ public class DownloadDeBoletins {
     }
 
     /**
-     * Uma virtual thread por pacote; devolve os resultados na ordem da entrada. Na primeira falha cancela as
-     * tarefas que ainda estão rodando e relança a exceção original.
+     * Uma virtual thread por pacote; devolve os resultados na ordem da entrada. Acompanha as tarefas na ordem em
+     * que terminam, para que a primeira falha cancele as outras na hora, sem esperar as que foram submetidas antes.
      */
     private static List<PacoteTse> emParalelo(List<PacoteTse> pacotes, Tarefa tarefa) throws IOException, InterruptedException {
         try (var executor = Executors.newVirtualThreadPerTaskExecutor()) {
+            var conclusao = new ExecutorCompletionService<PacoteTse>(executor);
             List<Future<PacoteTse>> futuros = pacotes.stream()
-                    .map(pacote -> executor.submit(() -> tarefa.executar(pacote)))
+                    .map(pacote -> conclusao.submit(() -> tarefa.executar(pacote)))
                     .toList();
             try {
-                var resultados = new ArrayList<PacoteTse>();
-                for (var futuro : futuros) resultados.add(futuro.get());
-                return resultados;
+                for (int i = 0; i < futuros.size(); i++) conclusao.take().get();
+                return futuros.stream().map(Future::resultNow).toList();
             } catch (ExecutionException e) {
                 futuros.forEach(f -> f.cancel(true));
                 switch (e.getCause()) {
