@@ -29,15 +29,15 @@ public class ResultadoCsvWriter {
 
     /** Apaga os CSVs de execuções anteriores e grava um arquivo por tabela. */
     public void gravar(List<Tabela> tabelas) throws IOException {
-        limparResultadosAnteriores();
-        Files.createDirectories(diretorio);
+        prepararDiretorio();
         for (var tabela : tabelas) {
             gravar(tabela);
         }
     }
 
-    private void limparResultadosAnteriores() throws IOException {
-        if (!Files.isDirectory(diretorio)) return;
+    /** Cria o diretório e apaga os CSVs de execuções anteriores; os outros arquivos ficam. */
+    public void prepararDiretorio() throws IOException {
+        Files.createDirectories(diretorio);
         try (var arquivos = Files.list(diretorio)) {
             for (var csv : arquivos.filter(f -> f.getFileName().toString().endsWith(".csv")).toList()) {
                 Files.delete(csv);
@@ -45,7 +45,7 @@ public class ResultadoCsvWriter {
         }
     }
 
-    private void gravar(Tabela tabela) throws IOException {
+    public void gravar(Tabela tabela) throws IOException {
         var linhas = Stream.concat(
                 Stream.<String[]>of(tabela.cabecalho().toArray(String[]::new)),
                 tabela.linhas().stream().map(linha -> linha.stream().map(this::celula).toArray(String[]::new)));

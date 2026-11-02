@@ -10,6 +10,8 @@ import java.io.UncheckedIOException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
@@ -21,10 +23,12 @@ public class Apuracao {
 
     private final FonteDeVotos<VotosNaSecao> boletins;
     private final HorarioDaVotacao horario;
+    private final Consumer<String> log;
 
     private Apuracao(Builder builder) {
         this.boletins = builder.boletins;
         this.horario = HorarioDaVotacao.da(builder.eleicao, builder.tolerancia);
+        this.log = builder.log;
     }
 
     public static Builder builder() {
@@ -36,6 +40,7 @@ public class Apuracao {
         private FonteDeVotos<VotosNaSecao> boletins;
         private Eleicao eleicao;
         private Duration tolerancia = HorarioDaVotacao.TOLERANCIA_PADRAO;
+        private Consumer<String> log = mensagem -> { };
 
         private Builder() { }
 
@@ -56,6 +61,12 @@ public class Apuracao {
             return this;
         }
 
+        /** Opcional: recebe o andamento, uma linha por UF apurada, com o percentual concluído. */
+        public Builder log(Consumer<String> log) {
+            this.log = Objects.requireNonNull(log, "log");
+            return this;
+        }
+
         public Apuracao build() {
             Objects.requireNonNull(boletins, "boletins");
             Objects.requireNonNull(eleicao, "eleicao");
@@ -65,10 +76,24 @@ public class Apuracao {
 
     /** Apura as UFs em paralelo; toList() mantém a ordem das UFs. */
     public ResultadoApuracao apurar() throws IOException {
-        var estados = boletins.ufs().parallelStream()
-                .map(this::apurarEstado)
+        var ufs = boletins.ufs();
+        var prontas = new AtomicInteger();
+        var estados = ufs.parallelStream()
+                .map(uf -> {
+                    var estado = apurarEstado(uf);
+                    andamento(prontas, ufs.size(), uf);
+                    return estado;
+                })
                 .toList();
         return new ResultadoApuracao(estados, horario);
+    }
+
+    /** Sincronizado para o percentual sair sempre crescente, mesmo com as UFs terminando em paralelo. */
+    private void andamento(AtomicInteger prontas, int total, String uf) {
+        synchronized (prontas) {
+            int n = prontas.incrementAndGet();
+            log.accept("[apuração] %3d%% (%d/%d UFs) %s".formatted(100 * n / total, n, total, uf));
+        }
     }
 
     private ResultadoEstado apurarEstado(String uf) {

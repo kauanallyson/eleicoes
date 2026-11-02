@@ -10,6 +10,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -36,6 +37,16 @@ class RelatorioTest {
         Relatorio.builder().diretorio(dir).tipos(List.of(TipoDeRelatorio.TOTAIS)).build().gravar(RespostasTest.boletins());
 
         assertEquals(List.of("votos_totais.csv"), arquivos(dir));
+    }
+
+    @Test
+    void logaOAndamentoEmPercentualPorCsv(@TempDir Path dir) throws Exception {
+        var log = new ArrayList<String>();
+
+        Relatorio.builder().diretorio(dir).tipos(List.of(TipoDeRelatorio.TOTAIS, TipoDeRelatorio.POR_ESTADO))
+                .log(log::add).build().gravar(RespostasTest.boletins());
+
+        assertEquals(List.of("[relatórios]  50% (1/2) votos_por_estado.csv", "[relatórios] 100% (2/2) votos_totais.csv"), log);
     }
 
     @Test
