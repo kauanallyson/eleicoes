@@ -56,5 +56,4 @@ class ContagemTest {
         assertEquals(0, vazia.total());
         assertEquals(0.0, vazia.percentual("A"));
     }
-
 }

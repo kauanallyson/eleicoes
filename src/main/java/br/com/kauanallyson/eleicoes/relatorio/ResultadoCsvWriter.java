@@ -59,7 +59,7 @@ public class ResultadoCsvWriter {
 
     private String celula(Object valor) {
         return switch (valor) {
-            case Double percentual -> String.format(PT_BR, "%.2f", percentual);
+            case Percentual percentual -> String.format(PT_BR, "%.2f", percentual.valor());
             case Boolean sim -> sim ? "SIM" : "NAO";
             default -> String.valueOf(valor);
         };

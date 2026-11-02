@@ -17,7 +17,7 @@ Obrigado pelo interesse! Este guia explica como propor mudanças no projeto.
 
 ```sh
 mvn test                                        # roda os testes
-mvn compile exec:java -Dexec.mainClass=Main     # roda a apuração
+mvn compile exec:java     # roda a apuração
 ```
 
 ## Fluxo
@@ -50,12 +50,15 @@ corpo da mensagem (`Refs #1`).
   - infraestrutura e coisas internas da aplicação podem ser em inglês: `Params`, `Confirmation`;
   - design patterns mantêm o nome em inglês: `Builder`, `Reader`, `Writer`, adapter;
   - os campos de `Voto` seguem o cabeçalho do CSV do TSE;
-  - a interface com o usuário (argumentos `--ano`, `--turno`, `--sim`, logs, CSVs) fica em português.
+  - a interface com o usuário (argumentos `--ano`, `--turno`, `--relatorios`, `--sim`, logs, CSVs) fica em português.
 - **Pacotes**:
+  - raiz: só o `EleicoesApplication`, o ponto de entrada que monta as peças dos outros pacotes.
+  - `cli`: a linha de comando (argumentos, pastas, perguntas no terminal); só ele fala com o terminal.
   - `apuracao`: a contagem; não depende dos formatos do TSE nem de I/O.
   - `bweb`: adapters que leem os arquivos do TSE e implementam `FonteDeVotos`.
-  - `relatorio`: as respostas (`Respostas`, sem I/O) e a gravação em CSV.
-- Uma pergunta nova é um método em `Respostas` que devolve uma `Tabela`; o CSV sai sozinho.
+  - `relatorio`: o catálogo (`TipoDeRelatorio`), as tabelas (`Respostas`, sem I/O) e a gravação em CSV.
+- Um relatório novo é um método em `Respostas` que devolve uma `Tabela` e uma constante em `TipoDeRelatorio`
+  (nome para `--relatorios` e descrição); a linha de comando, a mensagem de uso e o CSV saem sozinhos.
 - Prefira streams sem efeito colateral: monte resultados com `collect`/`toList`, não com `forEach`
   adicionando numa lista.
 - Comentários só para o que o código não mostra (regras do TSE, fusos, formatos de arquivo), não
@@ -71,7 +74,8 @@ corpo da mensagem (`Refs #1`).
 
 ## Testes
 
-- Teste pela interface do módulo: `Apuracao` com `FonteEmMemoria`, `Respostas`
+- Teste pela interface do módulo: `Apuracao` com `FonteEmMemoria`, `DownloadDeBoletins` com um `PortalTse`
+  em memória, `Respostas`
   com resultados montados no teste.
 - Testes não podem depender dos arquivos do TSE. Para testar um adapter de arquivo, gere um arquivo
   pequeno no próprio teste (`@TempDir`), como em `VotoReaderTest`.

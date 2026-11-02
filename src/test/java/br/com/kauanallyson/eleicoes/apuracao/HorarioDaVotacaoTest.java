@@ -62,8 +62,6 @@ class HorarioDaVotacaoTest {
         assertFalse(horario.encerrouDepoisDoLimite("ZZ", 29539, as(15, 11)));
     }
 
-
-
     @Test
     void antesDe2022CadaSecaoEncerravaAs17hDoSeuFusoLocal() {
         var horario2018 = new HorarioDaVotacao(LocalDate.of(2018, 10, 28), Duration.ofMinutes(10));

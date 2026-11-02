@@ -23,7 +23,7 @@ class ResultadoCsvWriterTest {
         Files.writeString(dir.resolve("anotacoes.txt"), "fica");
 
         new ResultadoCsvWriter(dir).gravar(List.of(new Tabela("t.csv", List.of("NOME", "VOTOS", "PERCENTUAL", "OK"),
-                List.of(List.of("LULA", 64256232L, 50.035, true)))));
+                List.of(List.of("LULA", 64256232L, new Percentual(50.035), true)))));
 
         assertFalse(Files.exists(dir.resolve("antigo_1715.csv")));
         assertEquals("fica", Files.readString(dir.resolve("anotacoes.txt")));

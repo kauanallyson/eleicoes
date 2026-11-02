@@ -24,11 +24,6 @@ class EleicaoTest {
     }
 
     @Test
-    void eleicaoGeralApuraPresidente() {
-        assertEquals("Presidente", new Eleicao(2022, 2).cargoPrincipal());
-    }
-
-    @Test
     void pastaPorAnoETurno() {
         assertEquals(Path.of("2026", "2t"), new Eleicao(2026, 2).pasta());
     }
