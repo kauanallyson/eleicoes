@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Stream;
@@ -46,7 +47,7 @@ public class VotoReader implements FonteDeVotos<VotosNaSecao> {
     @Override
     public Stream<VotosNaSecao> registros(String uf) throws IOException {
         var csv = diretorio.resolve(uf + EXTENSAO);
-        if (!Files.exists(csv)) throw new IllegalArgumentException("Arquivo não encontrado: " + csv);
+        if (!Files.exists(csv)) throw new NoSuchFileException(csv.toString(), null, "boletim de urna não encontrado");
 
         var reader = Files.newBufferedReader(csv, StandardCharsets.UTF_8);
         var votos = new CsvToBeanBuilder<Voto>(reader)
