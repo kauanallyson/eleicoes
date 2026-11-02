@@ -19,24 +19,23 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class ApuracaoTest {
 
     private static final LocalDate DIA = LocalDate.of(2026, 10, 25);
-    private static final HorarioDaVotacao HORARIO = new HorarioDaVotacao(DIA, Duration.ofMinutes(10));
 
     private static VotosNaSecao presidente(String uf, String votavel, long votos, LocalDateTime encerramento) {
         return new VotosNaSecao(uf, 1, "Presidente", votavel, votos, encerramento);
     }
 
     private static ResultadoApuracao apurar(Map<String, List<VotosNaSecao>> porUf) throws Exception {
-        return Apuracao.builder().fonte(new FonteEmMemoria<>(porUf)).horario(HORARIO).cargo("Presidente").build().apurar();
+        return Apuracao.builder().boletins(new FonteEmMemoria<>(porUf)).eleicao(new Eleicao(2026, 2)).tolerancia(Duration.ofMinutes(10)).build().apurar();
     }
 
     @Test
-    void soApuraOCargoDaEleicao() throws Exception {
+    void soApuraPresidente() throws Exception {
         var resultado = apurar(Map.of("SP", List.of(
                 presidente("SP", "A", 10, DIA.atTime(17, 0)),
                 new VotosNaSecao("SP", 1, "Governador", "G", 99, DIA.atTime(17, 0)),
                 new VotosNaSecao("SP", 1, "#NULO#", "#NULO#", 0, null))));
 
-        assertEquals(Contagem.de(Map.of(new Candidato("Presidente", "A"), 10L)), resultado.estados().getFirst().votos());
+        assertEquals(Contagem.de(Map.of("A", 10L)), resultado.estados().getFirst().votos());
     }
 
     @Test
@@ -65,7 +64,7 @@ class ApuracaoTest {
                 "AC", List.of(presidente("AC", "A", 2, DIA.atTime(15, 0)), presidente("AC", "B", 4, DIA.atTime(15, 0)))));
 
         assertEquals(List.of("AC", "SP"), resultado.estados().stream().map(ResultadoEstado::uf).toList());
-        assertEquals(Contagem.de(Map.of(new Candidato("Presidente", "A"), 12L, new Candidato("Presidente", "B"), 4L)),
+        assertEquals(Contagem.de(Map.of("A", 12L, "B", 4L)),
                 resultado.somarEstados(ResultadoEstado::votos));
     }
 

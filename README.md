@@ -3,15 +3,15 @@
 Apuração dos votos para Presidente no 2º turno das Eleições Gerais de 2026 a partir dos
 **boletins de urna (BU)** publicados pelo TSE, um CSV por UF mais o exterior (`ZZ`).
 
-O programa responde a quatro perguntas e grava cada resposta em um CSV na pasta `resultados/`
-(não imprime nada no terminal):
+O programa gera quatro relatórios, cada um num CSV na pasta `resultados/` (não imprime nada no terminal).
+Por padrão saem todos; para escolher, use `--relatorios` com os nomes separados por vírgula:
 
-| Resposta | Arquivo |
-|---|---|
-| Votos por candidato em cada estado, com percentual | `votos_por_estado.csv` |
-| Votos totais por candidato | `votos_totais.csv` |
-| Votos em seções encerradas depois do fim da votação, por UF | `votos_depois_do_fim_da_votacao_HHMM.csv` |
-| Votos por candidato até e após o fim da votação | `candidatos_ate_e_apos_fim_da_votacao_HHMM.csv` |
+| `--relatorios=` | Relatório | Arquivo |
+|---|---|---|
+| `por-estado` | Votos por candidato em cada estado, com percentual | `votos_por_estado.csv` |
+| `totais` | Votos totais por candidato | `votos_totais.csv` |
+| `depois-do-fim` | Votos em seções encerradas depois do fim da votação, por UF | `votos_depois_do_fim_da_votacao_HHMM.csv` |
+| `ate-e-apos-o-fim` | Votos por candidato até e após o fim da votação | `candidatos_ate_e_apos_fim_da_votacao_HHMM.csv` |
 
 `HHMM` é o horário de corte usado (fim da votação + tolerância), para não confundir resultados
 gerados com tolerâncias diferentes. A cada execução os CSVs anteriores de `resultados/` são apagados.
@@ -38,33 +38,36 @@ cada `.zip`, confere o SHA-512 publicado pelo TSE, converte para UTF-8 e grava `
 Com a pasta completa, as execuções seguintes não consultam mais o TSE.
 
 ```sh
-mvn compile exec:java -Dexec.mainClass=Main -Dexec.args="--ano=2026 --turno=2"   # padrão: 2026, 2º turno
-mvn compile exec:java -Dexec.mainClass=Main -Dexec.args="--ano=2022 --turno=1 --sim"  # --sim: baixa sem perguntar
+mvn compile exec:java -Dexec.args="--ano=2026 --turno=2"   # padrão: 2026, 2º turno
+mvn compile exec:java -Dexec.args="--ano=2022 --turno=1 --sim"  # --sim: baixa sem perguntar
+mvn compile exec:java -Dexec.args="--relatorios=totais,por-estado"  # só esses dois CSVs
 ```
 
-Só eleições gerais (2018, 2022, 2026...) e o cargo de Presidente são suportados; eleições municipais e
-cargos estaduais estão na [issue #3](https://github.com/kauanallyson/eleicoes/issues/3).
+Só são apurados os votos para Presidente, então só valem os anos de eleição geral (2018, 2022, 2026...).
 
 ## Como executar
 
 ```sh
-mvn compile exec:java -Dexec.mainClass=Main
+mvn compile exec:java
 ```
 
-Ou rode o `Main` direto pelo IntelliJ.
+Ou rode o `EleicoesApplication` direto pelo IntelliJ.
 
-Os parâmetros ficam no `Main.java`:
+Erros saem como uma mensagem curta em stderr, sem stack trace. Código de saída: `0` ok, `1` falhou
+(rede, arquivo ou download não autorizado), `2` argumento inválido.
+
+Os parâmetros ficam no `EleicoesApplication.java`:
 
 ```java
-var horario = new HorarioDaVotacao(LocalDate.of(2026, 10, 25), Duration.ofMinutes(10)); // dia e tolerância
-
 var apuracao = Apuracao.builder()
-        .fonte(new VotoReader(Path.of("bweb")))
-        .horario(horario)
+        .boletins(new VotoReader(boletins))        // bweb/<ano>/<turno>t
+        .eleicao(eleicao)                          // dia da votação
+        .tolerancia(Duration.ofMinutes(10))        // padrão: 10 min
         .build();
 
 var relatorio = Relatorio.builder()
-        .diretorio(Path.of("resultados"))
+        .diretorio(resultados)                     // resultados/<ano>/<turno>t
+        .tipos(params.relatorios())                // padrão: todos
         .build();
 
 relatorio.gravar(apuracao.apurar());
@@ -76,8 +79,10 @@ relatorio.gravar(apuracao.apurar());
 mvn test
 ```
 
-Os testes não dependem dos arquivos do TSE: a apuração recebe os votos por uma `FonteDeVotos`, e os
-testes usam um adapter em memória (`FonteEmMemoria`). Os adapters de arquivo (`VotoReader`) são testados com arquivos pequenos gerados no próprio teste.
+Os testes não dependem do TSE nem de internet: a apuração recebe os votos por uma `FonteDeVotos` e o
+download fala com o TSE por um `PortalTse`, e os testes usam adapters em memória. Os adapters de
+arquivo (`VotoReader`) são testados com arquivos pequenos gerados no próprio teste, e o
+`PortalTseHttp` com um servidor HTTP local.
 
 ## Metodologia
 
@@ -124,19 +129,28 @@ O BU só permite responder à segunda pergunta. A contagem de seções também d
 
 ```
 src/main/java
-├── Main.java                         # monta as peças e grava as respostas
 └── br/com/kauanallyson/eleicoes
+    ├── EleicoesApplication.java      # ponto de entrada: baixa, apura e grava as respostas
+    ├── cli                           # linha de comando: argumentos e terminal
+    │   ├── Params.java               # argumentos --ano, --turno, --relatorios, --sim
+    │   └── TerminalConfirmation.java # pergunta [s/N] antes do download
     ├── apuracao                      # contagem (não depende dos formatos do TSE)
+    │   ├── Eleicao.java              # ano, turno e data da votação
+    │   ├── HorarioDaVotacao.java     # fim da votação, tolerância e fusos horários
     │   ├── FonteDeVotos.java         # de onde vêm os registros de cada UF
     │   ├── VotosNaSecao.java         # uma linha do boletim de urna
-    │   ├── HorarioDaVotacao.java     # dia, fim da votação, tolerância e fusos horários
     │   ├── Contagem.java             # votos por chave: total, soma, ordem, percentual
-    │   └── Apuracao.java             # apura os boletins, em paralelo por UF e numa passada só
-    ├── bweb                          # adapter: boletins de urna em CSV (OpenCSV)
-    │   ├── Voto.java
-    │   └── VotoReader.java
+    │   ├── Apuracao.java             # apura os boletins em paralelo por UF
+    │   └── ResultadoEstado.java      # resultado de uma UF
+    ├── bweb                          # adapters: boletins de urna do TSE
+    │   ├── VotoReader.java           # lê os CSVs (OpenCSV)
+    │   ├── DownloadDeBoletins.java   # baixa o que falta, com confirmação
+    │   ├── Confirmation.java         # porta para pedir a confirmação
+    │   ├── PortalTse.java            # porta para o portal do TSE
+    │   └── PortalTseHttp.java        # adapter HTTP: catálogo, Range, SHA-512
     └── relatorio                     # respostas e gravação
-        ├── Respostas.java            # cada resposta como Tabela, sem I/O
+        ├── TipoDeRelatorio.java      # o catálogo: nome em --relatorios, descrição e a Tabela
+        ├── Respostas.java            # como cada relatório monta a sua Tabela, sem I/O
         ├── Relatorio.java            # grava todas as respostas
         └── ResultadoCsvWriter.java   # adapter CSV (;, UTF-8, decimal com vírgula)
 ```
