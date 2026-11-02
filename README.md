@@ -3,7 +3,7 @@
 Apuração dos votos para Presidente no 2º turno das Eleições Gerais de 2026 a partir dos
 **boletins de urna (BU)** publicados pelo TSE, um CSV por UF mais o exterior (`ZZ`).
 
-O programa gera quatro relatórios, cada um num CSV na pasta `resultados/`; no terminal mostra o andamento
+O programa gera cinco relatórios, cada um num CSV na pasta `resultados/`; no terminal mostra o andamento
 da apuração e da gravação em %.
 Por padrão saem todos; para escolher, use `--relatorios` com os nomes separados por vírgula:
 
@@ -13,6 +13,7 @@ Por padrão saem todos; para escolher, use `--relatorios` com os nomes separados
 | `totais` | Votos totais por candidato | `votos_totais.csv` |
 | `depois-do-fim` | Votos em seções encerradas depois do fim da votação, por UF | `votos_depois_do_fim_da_votacao_HHMM.csv` |
 | `ate-e-apos-o-fim` | Votos por candidato até e após o fim da votação | `candidatos_ate_e_apos_fim_da_votacao_HHMM.csv` |
+| `comparecimento` | Eleitores aptos, comparecimento e abstenção por UF, com percentual e o total do país (BR) | `comparecimento_e_abstencao_por_estado.csv` |
 
 `HHMM` é o horário de corte usado (fim da votação + tolerância), para não confundir resultados
 gerados com tolerâncias diferentes. A cada execução os CSVs anteriores de `resultados/` são apagados.
