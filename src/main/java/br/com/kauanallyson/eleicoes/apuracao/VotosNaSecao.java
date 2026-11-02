@@ -10,8 +10,10 @@ import java.time.LocalDateTime;
 /**
  * Votos de um votável (candidato, branco ou nulo) num cargo, numa seção: uma linha do boletim de urna.
  *
+ * @param aptos             eleitores aptos da seção; repete em todas as linhas da mesma seção
+ * @param comparecimento    eleitores que votaram na seção; repete em todas as linhas da mesma seção
  * @param encerramentoLocal horário de encerramento da seção no fuso local; {@code null} nas linhas sem seção
  *                          (ex.: juntas apuradoras do exterior)
  */
-public record VotosNaSecao(String uf, int municipio, String cargo, String votavel, long quantidade,
-                           LocalDateTime encerramentoLocal) { }
+public record VotosNaSecao(String uf, int municipio, int zona, int secao, String cargo, String votavel, long quantidade,
+                           long aptos, long comparecimento, LocalDateTime encerramentoLocal) { }

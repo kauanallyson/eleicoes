@@ -5,6 +5,7 @@
 
 package br.com.kauanallyson.eleicoes.relatorio;
 
+import br.com.kauanallyson.eleicoes.apuracao.Comparecimento;
 import br.com.kauanallyson.eleicoes.apuracao.ResultadoApuracao;
 import br.com.kauanallyson.eleicoes.apuracao.ResultadoEstado;
 
@@ -70,6 +71,29 @@ public final class Respostas {
         return new Tabela("candidatos_ate_e_apos_fim_da_votacao_%s.csv".formatted(s),
                 List.of("CANDIDATO", "VOTOS_ATE_" + s, "PERCENTUAL_ATE_" + s, "VOTOS_APOS_" + s, "PERCENTUAL_APOS_" + s),
                 linhas.toList());
+    }
+
+    /** Ordenado pelo percentual de abstenção, com o total do país (BR) na última linha. */
+    static Tabela comparecimentoPorEstado(ResultadoApuracao boletins) {
+        var porUf = boletins.estados().stream()
+                .sorted(Comparator.comparing((ResultadoEstado e) -> percentualDeAbstencao(e.comparecimento())).reversed())
+                .map(estado -> linhaDeComparecimento(estado.uf(), estado.comparecimento()));
+        var pais = boletins.estados().stream()
+                .map(ResultadoEstado::comparecimento)
+                .reduce(Comparecimento.NENHUM, Comparecimento::mais);
+
+        return new Tabela("comparecimento_e_abstencao_por_estado.csv",
+                List.of("UF", "APTOS", "COMPARECIMENTO", "PERCENTUAL_COMPARECIMENTO", "ABSTENCOES", "PERCENTUAL_ABSTENCOES"),
+                Stream.concat(porUf, Stream.of(linhaDeComparecimento("BR", pais))).toList());
+    }
+
+    private static Percentual percentualDeAbstencao(Comparecimento c) {
+        return Percentual.de(c.abstencoes(), c.aptos());
+    }
+
+    private static List<Object> linhaDeComparecimento(String uf, Comparecimento c) {
+        return List.of(uf, c.aptos(), c.comparecimento(), Percentual.de(c.comparecimento(), c.aptos()),
+                c.abstencoes(), percentualDeAbstencao(c));
     }
 
     /** Ex.: "1710" para 17:10, para o nome do arquivo deixar claro qual corte foi usado. */

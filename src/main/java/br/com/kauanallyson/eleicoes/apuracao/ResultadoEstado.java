@@ -9,5 +9,6 @@ package br.com.kauanallyson.eleicoes.apuracao;
 public record ResultadoEstado(String uf,
                               Contagem<String> votos,
                               Contagem<String> votosAteFimDaVotacao,
-                              Contagem<String> votosDepoisDoFimDaVotacao) {
+                              Contagem<String> votosDepoisDoFimDaVotacao,
+                              Comparecimento comparecimento) {
 }

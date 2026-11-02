@@ -99,9 +99,13 @@ public class Apuracao {
     private ResultadoEstado apurarEstado(String uf) {
         try (var votos = boletins.registros(uf)) {
             return votos.collect(Collectors.teeing(
-                    somarVotosParaPresidente(),
-                    votosAntesEDepoisDoLimite(),
-                    (validos, porFim) -> new ResultadoEstado(uf, validos, porFim.get(false), porFim.get(true))));
+                    Collectors.teeing(somarVotosParaPresidente(), votosAntesEDepoisDoLimite(), Map::entry),
+                    comparecimentoDasSecoes(),
+                    (validosEPorFim, comparecimento) -> {
+                        var porFim = validosEPorFim.getValue();
+                        return new ResultadoEstado(uf, validosEPorFim.getKey(), porFim.get(false), porFim.get(true),
+                                comparecimento);
+                    }));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -124,4 +128,22 @@ public class Apuracao {
                         v -> horario.encerrouDepoisDoLimite(v.uf(), v.municipio(), v.encerramentoLocal()),
                         Contagem.por(VotosNaSecao::votavel, VotosNaSecao::quantidade)));
     }
+
+    /**
+     * Aptos e comparecimento vêm repetidos em cada linha da seção (uma por votável), então cada seção conta uma vez só.
+     * Só as linhas de Presidente: no 1º turno a mesma seção aparece também nos outros cargos.
+     */
+    private Collector<VotosNaSecao, ?, Comparecimento> comparecimentoDasSecoes() {
+        return Collectors.filtering(
+                v -> v.cargo().equals(PRESIDENTE),
+                Collectors.collectingAndThen(
+                        Collectors.toMap(
+                                v -> new Secao(v.municipio(), v.zona(), v.secao()),
+                                v -> new Comparecimento(v.aptos(), v.comparecimento()),
+                                (primeira, repetida) -> primeira),
+                        porSecao -> porSecao.values().stream().reduce(Comparecimento.NENHUM, Comparecimento::mais)));
+    }
+
+    /** O número da seção só é único dentro da zona, e o da zona dentro do município. */
+    private record Secao(int municipio, int zona, int numero) { }
 }

@@ -24,7 +24,9 @@ public enum TipoDeRelatorio {
     DEPOIS_DO_FIM("depois-do-fim", "votos em seções encerradas depois do fim da votação, por UF",
             Respostas::votosDepoisDoFimDaVotacao),
     ATE_E_APOS_O_FIM("ate-e-apos-o-fim", "votos por candidato até e após o fim da votação",
-            Respostas::candidatosAteEDepoisDoFimDaVotacao);
+            Respostas::candidatosAteEDepoisDoFimDaVotacao),
+    COMPARECIMENTO("comparecimento", "eleitores aptos, comparecimento e abstenção por UF, com percentual",
+            Respostas::comparecimentoPorEstado);
 
     private final String nome;
     private final String descricao;

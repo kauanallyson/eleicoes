@@ -21,9 +21,9 @@ class VotoReaderTest {
     @Test
     void ufEhONomeDoArquivoEOsRegistrosVemDoCsv(@TempDir Path dir) throws Exception {
         Files.writeString(dir.resolve("AC.csv"), """
-                "SG_UF";"CD_MUNICIPIO";"DS_CARGO_PERGUNTA";"NM_VOTAVEL";"QT_VOTOS";"DT_ENCERRAMENTO"\r
-                "AC";"1538";"Presidente";"LULA";"43";"2026-10-25 15:00:48"\r
-                "AC";"1538";"Presidente";"Branco";"2";""\r
+                "SG_UF";"CD_MUNICIPIO";"NR_ZONA";"NR_SECAO";"DS_CARGO_PERGUNTA";"QT_APTOS";"QT_COMPARECIMENTO";"NM_VOTAVEL";"QT_VOTOS";"DT_ENCERRAMENTO"\r
+                "AC";"1538";"8";"68";"Presidente";"220";"169";"LULA";"43";"2026-10-25 15:00:48"\r
+                "AC";"1538";"8";"68";"Presidente";"220";"169";"Branco";"2";""\r
                 """);
         Files.writeString(dir.resolve("leia-me.txt"), "não é boletim");
 
@@ -32,8 +32,8 @@ class VotoReaderTest {
         assertEquals(List.of("AC"), leitor.ufs());
         try (var registros = leitor.registros("AC")) {
             assertEquals(List.of(
-                    new VotosNaSecao("AC", 1538, "Presidente", "LULA", 43, LocalDateTime.of(2026, 10, 25, 15, 0, 48)),
-                    new VotosNaSecao("AC", 1538, "Presidente", "Branco", 2, null)), registros.toList());
+                    new VotosNaSecao("AC", 1538, 8, 68, "Presidente", "LULA", 43, 220, 169, LocalDateTime.of(2026, 10, 25, 15, 0, 48)),
+                    new VotosNaSecao("AC", 1538, 8, 68, "Presidente", "Branco", 2, 220, 169, null)), registros.toList());
         }
     }
 
