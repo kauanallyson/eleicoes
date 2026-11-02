@@ -14,6 +14,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -100,6 +101,19 @@ class DownloadDeBoletinsTest {
     }
 
     @Test
+    void falhaDeUmaUfCancelaAsOutrasSemEsperarElasTerminarem(@TempDir Path dir) {
+        portal.ufLenta = "AC";
+        portal.ufQueFalha = "SP";
+
+        long inicio = System.nanoTime();
+        var erro = assertThrows(IOException.class, () -> download(dir, question -> true).garantir());
+
+        assertEquals("SP falhou", erro.getMessage());
+        assertTrue(Duration.ofNanos(System.nanoTime() - inicio).toSeconds() < 5, "esperou a UF lenta terminar");
+        assertFalse(Files.exists(dir.resolve("AC.csv")));
+    }
+
+    @Test
     void erroNoDownloadNaoDeixaCsv(@TempDir Path dir) throws Exception {
         Files.writeString(dir.resolve("SP.csv"), "x");
         portal.falharAoBaixar = true;
@@ -115,6 +129,10 @@ class DownloadDeBoletinsTest {
         private volatile boolean falharAoBaixar;
         /** Se presente, cada download só termina depois que todos começaram: em série, nunca terminaria. */
         private volatile CountDownLatch todasBaixando;
+        /** Demora 30 s (interrompível) para baixar. */
+        private volatile String ufLenta;
+        /** Falha na hora. */
+        private volatile String ufQueFalha;
 
         private PortalEmMemoria(Map<String, byte[]> zips) {
             this.zips = zips;
@@ -139,6 +157,14 @@ class DownloadDeBoletinsTest {
         public void baixar(PacoteTse pacote, Path destino) throws IOException {
             chamadas.add("baixar " + pacote.uf());
             if (falharAoBaixar) throw new IOException("SHA-512 não confere");
+            if (pacote.uf().equals(ufQueFalha)) throw new IOException(pacote.uf() + " falhou");
+            if (pacote.uf().equals(ufLenta)) {
+                try {
+                    Thread.sleep(Duration.ofSeconds(30));
+                } catch (InterruptedException e) {
+                    throw new IOException("cancelada", e);
+                }
+            }
             if (todasBaixando != null) {
                 todasBaixando.countDown();
                 try {
