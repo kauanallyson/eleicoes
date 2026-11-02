@@ -36,4 +36,17 @@ class VotoReaderTest {
                     new VotosNaSecao("AC", 1538, "Presidente", "Branco", 2, null)), registros.toList());
         }
     }
+
+    /** Em 2022 o TSE gravou as datas no formato brasileiro. */
+    @Test
+    void leOEncerramentoNoFormatoDe2022(@TempDir Path dir) throws Exception {
+        Files.writeString(dir.resolve("AC.csv"), """
+                "SG_UF";"CD_MUNICIPIO";"DS_CARGO_PERGUNTA";"NM_VOTAVEL";"QT_VOTOS";"DT_ENCERRAMENTO"\r
+                "AC";"1392";"Presidente";"Nulo";"1";"02/10/2022 15:01:09"\r
+                """);
+
+        try (var registros = new VotoReader(dir).registros("AC")) {
+            assertEquals(LocalDateTime.of(2022, 10, 2, 15, 1, 9), registros.toList().getFirst().encerramentoLocal());
+        }
+    }
 }

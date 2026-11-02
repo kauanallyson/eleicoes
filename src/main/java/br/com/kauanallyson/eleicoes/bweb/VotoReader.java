@@ -15,6 +15,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -24,6 +26,9 @@ public class VotoReader implements FonteDeVotos<VotosNaSecao> {
 
     private static final char CSV_DELIMITER = ';';
     private static final String EXTENSAO = ".csv";
+    /** 2026 grava {@code 2026-10-25 17:00:20}; 2022 grava {@code 02/10/2022 17:00:20}. */
+    private static final DateTimeFormatter DATA_HORA =
+            DateTimeFormatter.ofPattern("[yyyy-MM-dd HH:mm:ss][dd/MM/yyyy HH:mm:ss]");
 
     private final Path diretorio;
 
@@ -68,6 +73,12 @@ public class VotoReader implements FonteDeVotos<VotosNaSecao> {
 
     private static VotosNaSecao paraDominio(Voto v) {
         return new VotosNaSecao(v.SG_UF(), v.CD_MUNICIPIO(), v.DS_CARGO_PERGUNTA(), v.NM_VOTAVEL(), v.QT_VOTOS(),
-                v.DT_ENCERRAMENTO());
+                dataHora(v.DT_ENCERRAMENTO()));
+    }
+
+    /** Vazio nas linhas sem seção (ex.: juntas apuradoras do exterior). */
+    private static LocalDateTime dataHora(String texto) {
+        if (texto == null || texto.isBlank()) return null;
+        return LocalDateTime.parse(texto, DATA_HORA);
     }
 }
