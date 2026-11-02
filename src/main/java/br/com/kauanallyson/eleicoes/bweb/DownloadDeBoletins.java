@@ -29,19 +29,27 @@ import java.util.function.Consumer;
  */
 public class DownloadDeBoletins {
 
-    /** Boletins descompactados em UTF-8 ocupam ~6,3x o tamanho dos .zip (144 MB → ~900 MB no 2º turno de 2026). */
-    private static final double DESCOMPACTADO_POR_COMPACTADO = 6.3;
+    /**
+     * Quanto os CSVs em UTF-8 ocupam em relação aos .zip. Medido: o 1º turno tem todos os cargos (deputados,
+     * senador, governador) e fica ~24x (2022: 1,5 GB → ~35 GB); o 2º turno só tem Presidente e governador,
+     * ~6,5x (2026: 144 MB → 936 MB).
+     */
+    private static final double DESCOMPACTADO_POR_COMPACTADO_1O_TURNO = 24;
+    private static final double DESCOMPACTADO_POR_COMPACTADO_2O_TURNO = 6.5;
     private static final String MARCADOR = ".boletins-completos";
     private static final Locale PT_BR = Locale.of("pt", "BR");
 
     private final Path diretorio;
+    private final double descompactadoPorCompactado;
     private final PortalTse portal;
     private final Confirmation confirmation;
     private final Consumer<String> log;
     private final PreparadorDeBoletins preparador;
 
-    public DownloadDeBoletins(Path diretorio, PortalTse portal, Confirmation confirmation, Consumer<String> log) {
+    /** @param turno só para estimar o espaço em disco antes de pedir confirmação */
+    public DownloadDeBoletins(Path diretorio, int turno, PortalTse portal, Confirmation confirmation, Consumer<String> log) {
         this.diretorio = diretorio;
+        this.descompactadoPorCompactado = turno == 1 ? DESCOMPACTADO_POR_COMPACTADO_1O_TURNO : DESCOMPACTADO_POR_COMPACTADO_2O_TURNO;
         this.portal = portal;
         this.confirmation = confirmation;
         this.log = mensagem -> log.accept("[dados] " + mensagem);
@@ -69,7 +77,7 @@ public class DownloadDeBoletins {
                 String.join(", ", faltando.stream().map(PacoteTse::uf).toList())));
         log.accept("fonte: Portal de Dados Abertos do TSE");
         log.accept("download: %s (%d arquivos .zip); espaço em disco depois de descompactar: ~%s".formatted(
-                tamanho(total), faltando.size(), tamanho((long) (total * DESCOMPACTADO_POR_COMPACTADO))));
+                tamanho(total), faltando.size(), tamanho((long) (total * descompactadoPorCompactado))));
 
         if (!confirmation.confirm("Baixar agora?")) {
             log.accept("download não autorizado; nada foi baixado (sem terminal interativo, rode com --sim)");

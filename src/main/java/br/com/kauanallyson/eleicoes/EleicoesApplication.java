@@ -42,7 +42,7 @@ public class EleicoesApplication {
                     .build();
 
             var portal = PortalTseHttp.boletins(http, eleicao, IO::println);
-            var download = new DownloadDeBoletins(boletins, portal, TerminalConfirmation.of(params.autoConfirm()), IO::println);
+            var download = new DownloadDeBoletins(boletins, eleicao.turno(), portal, TerminalConfirmation.of(params.autoConfirm()), IO::println);
             if (!download.garantir()) CodigoDeSaida.FALHOU.sair();
 
             var apuracao = Apuracao.builder()
