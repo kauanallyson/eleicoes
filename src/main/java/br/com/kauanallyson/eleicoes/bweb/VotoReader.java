@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -55,12 +56,20 @@ public class VotoReader implements FonteDeVotos<VotosNaSecao> {
         if (!Files.exists(csv)) throw new NoSuchFileException(csv.toString(), null, "boletim de urna não encontrado");
 
         var reader = Files.newBufferedReader(csv, StandardCharsets.UTF_8);
-        var votos = new CsvToBeanBuilder<Voto>(reader)
-                .withType(Voto.class)
-                .withSeparator(CSV_DELIMITER)
-                .build();
+        Spliterator<Voto> votos;
+        try {
+            // o cabeçalho é lido e validado ao criar o iterador, não no build()
+            votos = new CsvToBeanBuilder<Voto>(reader)
+                    .withType(Voto.class)
+                    .withSeparator(CSV_DELIMITER)
+                    .build()
+                    .spliterator();
+        } catch (RuntimeException e) {
+            reader.close();
+            throw new IOException("cabeçalho inválido em %s: %s".formatted(csv, motivo(e)), e);
+        }
 
-        return StreamSupport.stream(votos.spliterator(), false)
+        return StreamSupport.stream(votos, false)
                 .map(VotoReader::paraDominio)
                 .onClose(() -> {
                     try {
@@ -74,6 +83,11 @@ public class VotoReader implements FonteDeVotos<VotosNaSecao> {
     private static VotosNaSecao paraDominio(Voto v) {
         return new VotosNaSecao(v.SG_UF(), v.CD_MUNICIPIO(), v.NR_ZONA(), v.NR_SECAO(), v.DS_CARGO_PERGUNTA(),
                 v.NM_VOTAVEL(), v.QT_VOTOS(), v.QT_APTOS(), v.QT_COMPARECIMENTO(), dataHora(v.DT_ENCERRAMENTO()));
+    }
+
+    /** O OpenCSV embrulha o erro do cabeçalho (ex.: coluna obrigatória faltando) num RuntimeException genérico. */
+    private static String motivo(RuntimeException e) {
+        return e.getCause() != null ? e.getCause().getMessage() : e.getMessage();
     }
 
     /** Vazio nas linhas sem seção (ex.: juntas apuradoras do exterior). */
